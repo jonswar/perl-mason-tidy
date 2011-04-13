@@ -51,26 +51,37 @@ method transform () {
 method tidy_html () {
     my $p = HTML::PullParser->new(
         doc             => $self->{source},
-        start           => '"S", text',
-        end             => '"E", text',
+        start           => '"S", text, tagname',
+        end             => '"E", text, tagname',
         default         => '"O", text',
         ignore_elements => [qw(script style)],
     ) || die "Can't open: $!";
     my $lineno = 0;
     my @deltas;
 
+    my @tagname_stack;
     while ( my $token = $p->get_token ) {
-        my ( $type, $text ) = @$token;
-        $deltas[$lineno]++ if $type eq 'S';
-        $deltas[$lineno]-- if $type eq 'E';
+        my ( $type, $text, $tagname ) = @$token;
+        if ( $type eq 'S' ) {
+            $deltas[$lineno]++;
+            push( @tagname_stack, $tagname );
+        }
+        if ( $type eq 'E' ) {
+            while ( my $popped_tagname = pop(@tagname_stack) ) {
+                $deltas[$lineno]--;
+                last if $popped_tagname eq $tagname;
+            }
+        }
         $lineno += ( $text =~ tr/\n// );
     }
+
     my $level  = 0;
     my $result = '';
     my @lines  = split( "\n", $self->{source} );
-    for ( my $lineno = 0 ; $lineno < @deltas ; $lineno++ ) {
+    for ( my $lineno = 0 ; $lineno < @lines ; $lineno++ ) {
         my $delta = $deltas[$lineno] || 0;
         $level += $delta if $delta < 0;
+        $level = 0 if $level < 0;
         $result .= scalar( '  ' x $level ) . $lines[$lineno] . "\n";
         $level += $delta if $delta > 0;
     }

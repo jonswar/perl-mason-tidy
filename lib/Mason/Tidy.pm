@@ -18,10 +18,10 @@ has 'unique_string_prefix' => ( default => '__masontidy__' );
 #
 
 method tidy ($source) {
-    foreach my $subclass qw(PlainText Substitution) {
+    foreach my $subclass qw(PlainText IsolatedPerl InlinePerl RecursiveBlock) {
         my $class = "Mason::Tidy::Compilation::$subclass";
         Class::MOP::load_class($class);
-        my $c = $class->new( source => $source, tidy => $self );
+        my $c = $class->new( source => $source, tidy_object => $self );
         $c->transform;
         $source = $c->source;
     }

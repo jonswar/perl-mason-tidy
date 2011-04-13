@@ -5,8 +5,8 @@ use Mason::Tidy::Moose;
 my $identifier = qr/[[:alpha:]_]\w*/;
 
 # Passed attributes
-has 'source' => ( required => 1 );
-has 'tidy'   => ( required => 1 );
+has 'source'      => ( required => 1 );
+has 'tidy_object' => ( required => 1 );
 
 # Derived attributes
 has 'named_block_regex'   => ( lazy_build => 1, init_arg => undef );
@@ -104,7 +104,7 @@ method _match_block ($block_regex, $named) {
 }
 
 method _match_block_end ($block_type) {
-    my $re = qr,\G((.*?)</%\Q$block_type\E>(\n?\n?)),is;
+    my $re = qr,\G((.*?)</%\Q$block_type\E>),is;
     if ( $self->{source} =~ /$re/gc ) {
         return $1;
     }
@@ -241,7 +241,7 @@ method _throw_syntax_error ($msg) {
 }
 
 method unique_string () {
-    return $self->tidy->unique_string;
+    return $self->tidy_object->unique_string;
 }
 
 1;
