@@ -6,6 +6,7 @@ extends 'Mason::Tidy::Compilation';
 method handle_default () { }
 
 method handle_block ($pos, $length, $block_type) {
+    $pos ||= 0;
     if ( $block_type eq 'perl' ) {
 
         # Get what's inside the <%perl> and </%perl> tags
@@ -22,6 +23,7 @@ method handle_block ($pos, $length, $block_type) {
 }
 
 method handle_perl_line ($pos, $length) {
+    $pos ||= 0;
     $pos += 2;
     $length -= 2;
     my $code = substr( $self->{source}, $pos, $length );

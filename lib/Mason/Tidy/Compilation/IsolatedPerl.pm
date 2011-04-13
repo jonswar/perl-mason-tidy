@@ -6,6 +6,7 @@ extends 'Mason::Tidy::Compilation';
 method handle_default () { }
 
 method handle_block ($pos, $length, $block_type) {
+    $pos ||= 0;
     if ( $block_type =~ /^(?:init|class|once)$/ ) {
 
         # Get what's inside the <%...> and </%...> tags
@@ -23,6 +24,7 @@ method handle_block ($pos, $length, $block_type) {
 }
 
 method handle_substitution ($pos, $length) {
+    $pos ||= 0;
     my $untidied = substr( $self->{source}, $pos + 2, $length - 4 );
     my $tidied = $self->perltidy($untidied);
     chomp($tidied);

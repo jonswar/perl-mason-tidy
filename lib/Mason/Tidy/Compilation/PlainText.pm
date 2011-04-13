@@ -1,56 +1,50 @@
 package Mason::Tidy::Compilation::PlainText;
-use File::Slurp;
-use HTML::PullParser;
 use Mason::Tidy::Moose;
+use HTML::PullParser;
 extends 'Mason::Tidy::Compilation';
 
-method conceal_all () {
-    my $adjust = 0;
-    foreach my $entry ( @{ $self->{to_conceal} } ) {
-        my ( $pos, $length, $type, $subst ) = @$entry;
-        $self->{concealed}->{$subst} =
-          { type => $type, text => substr( $self->{source}, $pos + $adjust, $length ) };
-        substr( $self->{source}, $pos + $adjust, $length ) = $subst;
-        $adjust += ( length($subst) - $length );
-    }
-}
-
-method handle_block ()          { $self->handle_non_plain_text( @_, 'block' ) }
-method handle_component_call () { $self->handle_non_plain_text( @_, 'component_call' ) }
-method handle_perl_line ()      { $self->handle_non_plain_text( @_, 'perl_line' ) }
-method handle_substitution ()   { $self->handle_non_plain_text( @_, 'substitution' ) }
-
-method handle_non_plain_text ($pos, $length, $type) {
-    my $subst = sprintf( "<!--%s-->", $self->unique_string );
-    push( @{ $self->{to_conceal} }, [ $pos, $length, $type, $subst ] );
+method handle_default ($pos, $length) {
+    $pos ||= 0;
+    $self->{untidied_html} .= "\n";
 }
 
 method handle_plain_text ($pos, $length) {
+    $pos ||= 0;
+    my $text = substr( $self->{source}, $pos, $length );
+    my $marker = sprintf( "<!--%s-->", $self->unique_string );
+    my $nl;
+    if ( $pos > 0 && substr( $self->{source}, $pos - 1, 1 ) eq "\n" ) {
+        $text = "\n$text";
+        $nl   = 1;
+    }
+    my $marked_html = $marker . $text . $marker;
+    $self->{untidied_html} .= $marked_html;
+    push( @{ $self->{to_replace} }, [ $marker, $pos, $length, $nl ] );
 }
 
-method reveal_all () {
-    while ( my ( $subst, $repl ) = each( %{ $self->{concealed} } ) ) {
-        my $type = $repl->{type};
-        my $text = $repl->{text};
-        if ( $type eq 'perl_line' || $type eq 'block' ) {
-            $self->{source} =~ s/^\s*$subst/$text/m;
-        }
-        else {
-            $self->{source} =~ s/$subst/$text/;
-        }
+method replace_all () {
+    my $adjust = 0;
+    foreach my $repl ( @{ $self->{to_replace} } ) {
+        my ( $marker, $pos, $length, $nl ) = @$repl;
+        my ($tidied) = ( $self->{tidied_html} =~ /$marker(.*)$marker/s )
+          or die "could not find code delimited by '$marker': " . $self->{tidied_html};
+        $tidied =~ s/^\n// if $nl;
+        my $next = substr( $self->{source}, $pos + $adjust + $length, 3 );
+        $tidied =~ s/[ \t]+$// unless $next eq '<% ' || $next =~ /<&/;
+        substr( $self->{source}, $pos + $adjust, $length ) = $tidied;
+        $adjust += ( length($tidied) - $length );
     }
 }
 
 method transform () {
     $self->parse;
-    $self->conceal_all;
-    $self->tidy_html;
-    $self->reveal_all;
+    $self->{tidied_html} = $self->tidy_html( $self->{untidied_html} );
+    $self->replace_all;
 }
 
-method tidy_html () {
+method tidy_html ($source) {
     my $p = HTML::PullParser->new(
-        doc             => $self->{source},
+        doc             => $source,
         start           => '"S", text, tagname',
         end             => '"E", text, tagname',
         default         => '"O", text',
@@ -77,7 +71,8 @@ method tidy_html () {
 
     my $level  = 0;
     my $result = '';
-    my @lines  = split( "\n", $self->{source} );
+    my @lines  = split( "\n", $source );
+
     for ( my $lineno = 0 ; $lineno < @lines ; $lineno++ ) {
         my $delta = $deltas[$lineno] || 0;
         $level += $delta if $delta < 0;
@@ -85,7 +80,7 @@ method tidy_html () {
         $result .= scalar( '  ' x $level ) . $lines[$lineno] . "\n";
         $level += $delta if $delta > 0;
     }
-    $self->{source} = $result;
+    return $result;
 }
 
 1;
