@@ -15,7 +15,7 @@ has 'indent_perl_block'   => ( is => 'ro', default => sub { 2 } );
 has 'perltidy_argv'       => ( is => 'ro', default => sub { '' } );
 has 'perltidy_block_argv' => ( is => 'ro', default => sub { '' } );
 has 'perltidy_line_argv'  => ( is => 'ro', default => sub { '-i=2' } );
-has 'perltidy_subst_argv' => ( is => 'ro', default => sub { '' } );
+has 'perltidy_tag_argv'   => ( is => 'ro', default => sub { '' } );
 
 # Private
 has '_is_mixed_block'   => ( is => 'lazy' );
@@ -122,7 +122,7 @@ method tidy_subst_expr ($expr) {
     $self->perltidy(
         source      => \$expr,
         destination => \my $tidied_expr,
-        argv        => $self->perltidy_subst_argv,
+        argv        => $self->perltidy_tag_argv,
     );
     return trim($tidied_expr);
 }
@@ -215,7 +215,7 @@ __END__
 
 =head1 NAME
 
-Mason::Tidy - Tidy Perl in Mason components
+Mason::Tidy - Engine for masontidy
 
 =head1 SYNOPSIS
 
@@ -226,8 +226,30 @@ Mason::Tidy - Tidy Perl in Mason components
 
 =head1 DESCRIPTION
 
-Mason::Tidy uses L<perltidy|perltidy> to tidy the Perl embedded in Mason
-components. It handles both L<Mason 1|HTML::Mason> and L<Mason 2|Mason> syntax.
+This is the engine used by L<masontidy|masontidy> - read that first to get an
+overview.
+
+You can call this API from your own program instead of executing C<masontidy>.
+
+=head1 CONSTRUCTOR PARAMETERS
+
+=over
+
+=item indent_perl_block
+
+=item perltidy_argv
+
+=item perltidy_block_argv
+
+=item perltidy_line_argv
+
+=item perltidy_subst_argv
+
+These options are the same as the equivalent C<masontidy> command-line options,
+replacing dashes with underscore (e.g. the C<indent-per-block> option becomes
+C<indent_perl_block> here).
+
+=back
 
 =head1 METHODS
 
@@ -238,3 +260,5 @@ components. It handles both L<Mason 1|HTML::Mason> and L<Mason 2|Mason> syntax.
 Tidy component source I<$source> and return the result.
 
 =back
+
+=cut

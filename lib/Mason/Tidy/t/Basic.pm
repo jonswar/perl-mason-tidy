@@ -52,7 +52,7 @@ sub test_perl_lines : Tests {
 ',
         expect => '
 % if ($foo) {
-%   my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
+%     my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
 % }
 '
     );
@@ -70,15 +70,15 @@ sub test_perltidy_argv : Tests {
 ',
         expect => '
 % if ($foo) {
-%   if ($bar) {
-%     baz();
-%   }
+%     if ($bar) {
+%         baz();
+%     }
 % }
 '
     );
     tidy(
-        desc    => 'indent 4',
-        options => { perltidy_argv => '-fnl -i=4' },
+        desc    => 'perltidy_line_argv = -i=2',
+        options => { perltidy_line_argv => '-i=2' },
         source  => '
 % if ($foo) {
 % if ($bar) {
@@ -88,9 +88,9 @@ sub test_perltidy_argv : Tests {
 ',
         expect => '
 % if ($foo) {
-%     if ($bar) {
-%         baz();
-%     }
+%   if ($bar) {
+%     baz();
+%   }
 % }
 '
     );
@@ -177,7 +177,7 @@ some text
 
 % if ( $contents || $allow_empty ) {
   <ul>
-%   foreach my $line (@lines) {
+%     foreach my $line (@lines) {
 <%perl>
   dothis();
   andthat();
@@ -186,7 +186,7 @@ some text
       <% 2 + ( 3 - 4 ) * 6 %>
   </li>
   <li><% foo( $.bar, $.baz, $.bleah ) %></li>
-%   }
+%     }
   </ul>
 % }
   
@@ -194,11 +194,12 @@ some more text
 
 <%method foo>
 % if ( defined($bar) ) {
-%   if ($write_list) {
-  even more text
-%   }
+%     if ($write_list) {
+even more text
+%     }
 % }
-</%method>'
+</%method>
+'
     );
 }
 
