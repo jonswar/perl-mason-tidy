@@ -42,7 +42,7 @@ my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time 
     );
 
     tidy(
-        desc   => 'empty init',
+        desc   => 'empty init section',
         source => '
 <%init>
 
