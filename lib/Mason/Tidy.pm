@@ -11,9 +11,8 @@ use warnings;
 my $marker_count = 0;
 
 has '_open_block_regex' => ( is => 'lazy' );
-has 'marker_prefix' => ( is => 'ro', default => sub { '__masontidy__' } );
-has 'perltidy_argv' =>
-  ( is => 'ro', default => sub { '-noll -fnl -nbbc -i=2' } );
+has 'marker_prefix'     => ( is => 'ro', default => sub { '__masontidy__' } );
+has 'perltidy_argv'     => ( is => 'ro', default => sub { '-noll -fnl -nbbc -i=2' } );
 
 method __build_open_block_regex () {
     my $re = '<%(' . join( '|', @{ $self->block_names } ) . ')(\s+\w+)?>';
@@ -41,14 +40,10 @@ method tidy_method ($source) {
         if ( $line =~ /^%%/ ) { $add_element->( 'ignore_line', $line ); next }
         if ( $line =~ /^%/ )  { $add_element->( 'perl_line',   $line ); next }
         if ( my ($block_type) = ( $line =~ $open_block_regex ) ) {
-            my $end_line =
-              $self->capture_block( \@lines, $block_type, $cur_line + 1,
-                $last_line );
-            my $block_contents =
-              join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
+            my $end_line = $self->capture_block( \@lines, $block_type, $cur_line + 1, $last_line );
+            my $block_contents = join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
             $block_contents = join( "\n",
-                $lines[$cur_line],
-                $self->handle_block( $block_type, $block_contents ),
+                $lines[$cur_line], $self->handle_block( $block_type, $block_contents ),
                 $lines[$end_line] );
             $add_element->( 'block', $block_contents );
             $cur_line = $end_line;
@@ -62,11 +57,8 @@ method tidy_method ($source) {
     #
     my $untidied_perl = join(
         "\n",
-        map {
-            $_->[0] eq 'perl_line'
-              ? substr( $_->[1], 2 )
-              : $self->replace_with_perl_comment($_)
-        } @elements
+        map { $_->[0] eq 'perl_line' ? substr( $_->[1], 2 ) : $self->replace_with_perl_comment($_) }
+          @elements
     );
     $self->perltidy(
         source      => \$untidied_perl,
@@ -111,7 +103,7 @@ method capture_block ($lines, $block_type, $cur_line, $last_line) {
 }
 
 method handle_block ($block_type, $block_contents) {
-    if ( $block_type =~ /^(class|init|perl)$/ ) {
+    if ( $block_type =~ /^(class|init|once|perl)$/ ) {
         $self->perltidy(
             source      => \$block_contents,
             destination => \my $tidied_block_contents,
@@ -119,9 +111,7 @@ method handle_block ($block_type, $block_contents) {
         );
         $block_contents = trim($tidied_block_contents);
     }
-    elsif (
-        $block_type =~ /^(after|augment|around|before|filter|method|override)/ )
-    {
+    elsif ( $block_type =~ /^(after|augment|around|before|filter|method|override)/ ) {
         $block_contents = $self->tidy_method($block_contents);
     }
     $block_contents =~ s/^(?!%)/  /mg;
