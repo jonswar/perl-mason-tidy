@@ -7,7 +7,9 @@
 ^docs
 ^git
 ^htdocs
+^perlcriticrc
 ^release
+^tidyall.ini
 ^tmp
 ^weaver.ini
 ^z-backup

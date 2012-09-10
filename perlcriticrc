@@ -1,0 +1,8 @@
+only = 1
+severity = 1
+verbose = %m on line %l [%p]\n
+
+[Moose::RequireMakeImmutable]
+[TestingAndDebugging::RequireUseStrict]
+equivalent_modules = Test::Class::Most
+[Variables::ProhibitConditionalDeclarations]
