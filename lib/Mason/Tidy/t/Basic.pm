@@ -55,6 +55,38 @@ my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time 
     );
 }
 
+sub test_mixed_sections : Tests {
+    tidy(
+        desc   => 'method',
+        source => '
+<%method foo>
+%if (  $foo) {
+content
+%}
+</%method>
+',
+        expect => '
+<%method foo>
+% if ($foo) {
+content
+% }
+</%method>
+'
+    );
+
+    tidy(
+        desc   => 'empty method',
+        source => '
+<%method foo>
+</%method>
+',
+        expect => '
+<%method foo>
+</%method>
+'
+    );
+}
+
 sub test_perl_lines : Tests {
     tidy(
         desc   => 'perl lines',
@@ -65,7 +97,7 @@ sub test_perl_lines : Tests {
 ',
         expect => '
 % if ($foo) {
-%     my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
+%   my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
 % }
 '
     );
@@ -83,9 +115,9 @@ sub test_perltidy_argv : Tests {
 ',
         expect => '
 % if ($foo) {
-%     if ($bar) {
-%         baz();
-%     }
+%   if ($bar) {
+%     baz();
+%   }
 % }
 '
     );
@@ -190,7 +222,7 @@ some text
 
 % if ( $contents || $allow_empty ) {
   <ul>
-%     foreach my $line (@lines) {
+%   foreach my $line (@lines) {
 <%perl>
   dothis();
   andthat();
@@ -199,7 +231,7 @@ some text
       <% 2 + ( 3 - 4 ) * 6 %>
   </li>
   <li><% foo( $.bar, $.baz, $.bleah ) %></li>
-%     }
+%   }
   </ul>
 % }
   
@@ -207,9 +239,9 @@ some more text
 
 <%method foo>
 % if ( defined($bar) ) {
-%     if ($write_list) {
+%   if ($write_list) {
 even more text
-%     }
+%   }
 % }
 </%method>
 '
