@@ -4,5 +4,5 @@ verbose = %m on line %l [%p]\n
 
 [Moose::RequireMakeImmutable]
 [TestingAndDebugging::RequireUseStrict]
-equivalent_modules = Test::Class::Most
+equivalent_modules = Moo Test::Class::Most
 [Variables::ProhibitConditionalDeclarations]
