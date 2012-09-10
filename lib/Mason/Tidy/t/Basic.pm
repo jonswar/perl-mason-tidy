@@ -40,6 +40,19 @@ my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time 
 </%init>
 '
     );
+
+    tidy(
+        desc   => 'empty init',
+        source => '
+<%init>
+
+</%init>
+',
+        expect => '
+<%init>
+</%init>
+'
+    );
 }
 
 sub test_perl_lines : Tests {

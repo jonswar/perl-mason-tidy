@@ -70,10 +70,15 @@ method tidy_method ($source) {
         my $line = $lines[$cur_line];
         if ( $line =~ /^%/ ) { $add_element->( 'perl_line', $line ); next }
         if ( my ($block_type) = ( $line =~ $open_block_regex ) ) {
-            my $end_line = $self->capture_block( \@lines, $block_type, $cur_line + 1, $last_line );
-            my $block_contents = join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
+            my $end_line =
+              $self->capture_block( \@lines, $block_type, $cur_line + 1,
+                $last_line );
+            my $block_contents =
+              join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
             $block_contents = join( "\n",
-                $lines[$cur_line], $self->handle_block( $block_type, $block_contents ),
+                $lines[$cur_line],
+                grep { /\S/ }
+                  $self->handle_block( $block_type, $block_contents ),
                 $lines[$end_line] );
             $add_element->( 'block', $block_contents );
             $cur_line = $end_line;
