@@ -33,7 +33,7 @@ method _build__is_perl_block () {
 }
 
 method _build__open_block_regex () {
-    my $re = '<%(' . join( '|', $self->block_names ) . ')(\s+\w+)?>';
+    my $re = '^\s*<%(' . join( '|', $self->block_names ) . ')(\s+\w+)?>\s*$';
     return qr/$re/;
 }
 
@@ -68,29 +68,47 @@ method tidy_method ($source) {
     my $last_line = scalar(@lines) - 1;
     for ( my $cur_line = 0 ; $cur_line <= $last_line ; $cur_line++ ) {
         my $line = $lines[$cur_line];
-        if ( $line =~ /^%\s*\}\}\s*/ ) {
-            $add_element->( 'perl_line', "% } # __end filter" );
-            next;
-        }
+
+        # Begin Mason 2 filter invocation
+        #
         if ( $line =~ /^%\s*(.*)\{\{\s*/ ) {
             $add_element->( 'perl_line', "% given (__filter($1)) {" );
             next;
         }
+
+        # End Mason 2 filter invocation
+        #
+        if ( $line =~ /^%\s*\}\}\s*/ ) {
+            $add_element->( 'perl_line', "% } # __end filter" );
+            next;
+        }
+
+        # %-line
+        #
         if ( $line =~ /^%/ ) {
             $add_element->( 'perl_line', $line );
             next;
         }
-        if ( my ( $block_type, $block_args ) = ( $line =~ $open_block_regex ) ) {
-            my $end_line = $self->capture_block( \@lines, $block_type, $cur_line + 1, $last_line );
-            my $block_contents = join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
-            $block_contents = join( "\n",
-                $lines[$cur_line],
-                grep { /\S/ } $self->handle_block( $block_type, $block_args, $block_contents ),
-                $lines[$end_line] );
-            $add_element->( 'block', $block_contents );
-            $cur_line = $end_line;
-            next;
+
+        # Block start and end, each on their own line
+        #
+        if ( my ( $block_type, $block_args ) = ( $line =~ /$open_block_regex/m ) ) {
+            if ( my $end_line =
+                $self->capture_block( \@lines, $block_type, $cur_line + 1, $last_line ) )
+            {
+                my $block_contents = join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
+                $block_contents = join( "\n",
+                    $lines[$cur_line],
+                    grep { /\S/ } $self->handle_block( $block_type, $block_args, $block_contents ),
+                    $lines[$end_line] );
+                $add_element->( 'block', $block_contents );
+                $cur_line = $end_line;
+                next;
+            }
         }
+
+        # Everything else goes untouched
+        #
         $add_element->( 'text_line', $line );
     }
 
@@ -149,7 +167,7 @@ method capture_block ($lines, $block_type, $cur_line, $last_line) {
             return $this_line;
         }
     }
-    die "could not find matching </%$block_type> after line $cur_line";
+    return undef;
 }
 
 method handle_block ($block_type, $block_args, $block_contents) {

@@ -26,6 +26,7 @@ sub tidy {
 
 sub trim {
     my $str = $_[0];
+    return undef if !defined($str);
     for ($str) { s/^\s+//; s/\s+$// }
     return $str;
 }
@@ -216,6 +217,18 @@ sub test_perltidy_argv : Tests {
 %     baz();
 %   }
 % }
+'
+    );
+}
+
+sub test_single_line_block : Tests {
+    tidy(
+        desc   => 'indent_perl_block 0',
+        source => '
+<%perl>my $foo = 5;</%perl>
+',
+        expect => '
+<%perl>my $foo = 5;</%perl>
 '
     );
 }
