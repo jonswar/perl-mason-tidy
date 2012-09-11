@@ -206,4 +206,9 @@ Print help message
 
 =back
 
+=head1 ERRORS
+
+Will throw a fatal error if a file cannot be processed, generally because
+perltidy encountered bad Perl syntax.
+
 =cut
