@@ -103,6 +103,32 @@ sub test_perl_lines : Tests {
     );
 }
 
+sub test_filter_invoke : Tests {
+    tidy(
+        desc   => 'filter invoke',
+        source => '
+%$.Trim(3,17) {{
+%sub {uc($_[0]  )} {{
+%$.Fobernate() {{
+   This string will be trimmed, uppercased
+   and fobernated
+% }}
+%}}
+%   }}
+',
+        expect => '
+% $.Trim( 3, 17 ) {{
+%   sub { uc( $_[0] ) } {{
+%     $.Fobernate() {{
+   This string will be trimmed, uppercased
+   and fobernated
+%     }}
+%   }}
+% }}
+'
+    );
+}
+
 sub test_perltidy_argv : Tests {
     tidy(
         desc   => 'default indent 2',
@@ -206,8 +232,10 @@ andthat();
 % }
   </ul>
 % }
-  
-some more text
+
+%  $.Filter(3,2) {{  
+some filtered text
+%}}
 
 <%method foo>
 %if(defined($bar)) {
@@ -234,8 +262,10 @@ some text
 %   }
   </ul>
 % }
-  
-some more text
+
+% $.Filter( 3, 2 ) {{
+some filtered text
+% }}
 
 <%method foo>
 % if ( defined($bar) ) {

@@ -68,17 +68,24 @@ method tidy_method ($source) {
     my $last_line = scalar(@lines) - 1;
     for ( my $cur_line = 0 ; $cur_line <= $last_line ; $cur_line++ ) {
         my $line = $lines[$cur_line];
-        if ( $line =~ /^%/ ) { $add_element->( 'perl_line', $line ); next }
+        if ( $line =~ /^%\s*\}\}\s*/ ) {
+            $add_element->( 'perl_line', "% } # __end filter" );
+            next;
+        }
+        if ( $line =~ /^%\s*(.*)\{\{\s*/ ) {
+            $add_element->( 'perl_line', "% given (__filter($1)) {" );
+            next;
+        }
+        if ( $line =~ /^%/ ) {
+            $add_element->( 'perl_line', $line );
+            next;
+        }
         if ( my ($block_type) = ( $line =~ $open_block_regex ) ) {
-            my $end_line =
-              $self->capture_block( \@lines, $block_type, $cur_line + 1,
-                $last_line );
-            my $block_contents =
-              join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
+            my $end_line = $self->capture_block( \@lines, $block_type, $cur_line + 1, $last_line );
+            my $block_contents = join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
             $block_contents = join( "\n",
                 $lines[$cur_line],
-                grep { /\S/ }
-                  $self->handle_block( $block_type, $block_contents ),
+                grep { /\S/ } $self->handle_block( $block_type, $block_contents ),
                 $lines[$end_line] );
             $add_element->( 'block', $block_contents );
             $cur_line = $end_line;
@@ -110,6 +117,10 @@ method tidy_method ($source) {
             $add_element->( @{ $self->restore($marker) } );
         }
         else {
+            # Convert back filter invocation
+            #
+            $line =~ s/given\s*\(\s*__filter\s*\(\s*(.*?)\s*\)\s*\)\s*\{/$1 \{\{/;
+            $line =~ s/\}\s*\#\s*__end filter/\}\}/;
             $add_element->( 'perl_line', "% " . $line );
         }
     }
