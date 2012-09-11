@@ -8,13 +8,20 @@ use base qw(Test::Class);
 sub tidy {
     my %params  = @_;
     my $source  = $params{source} or die "source required";
-    my $expect  = $params{expect} or die "expect required";
     my $desc    = $params{desc} or die "desc required";
     my $options = $params{options} || {};
 
     my $mt   = Mason::Tidy->new(%$options);
-    my $dest = $mt->tidy($source);
-    is( trim($dest), trim($expect), $desc );
+    my $dest = eval { $mt->tidy($source) };
+    my $err  = $@;
+    if ( my $expect_error = $params{expect_error} ) {
+        like( $err, $expect_error, "got error - $desc" );
+        is( $dest, undef, "no dest returned - $desc" );
+    }
+    else {
+        ok( !defined($err), "no error - $desc" );
+        is( trim($dest), trim( $params{expect} ), "expected content - $desc" );
+    }
 }
 
 sub trim {
@@ -209,6 +216,14 @@ if ($foo) {
   }
 </%perl>
 '
+    );
+}
+
+sub test_errors : Tests {
+    tidy(
+        desc         => 'syntax error',
+        source       => '% if ($foo) {',
+        expect_error => qr/final indentation level/,
     );
 }
 

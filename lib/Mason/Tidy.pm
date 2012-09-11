@@ -194,11 +194,14 @@ method restore ($marker) {
 
 method perltidy (%params) {
     $params{argv} .= ' ' . $self->perltidy_argv;
+    my $errorfile;
     Perl::Tidy::perltidy(
         prefilter  => \&perltidy_prefilter,
         postfilter => \&perltidy_postfilter,
+        errorfile  => \$errorfile,
         %params
     );
+    die $errorfile if $errorfile;
 }
 
 func perltidy_prefilter ($buf) {
