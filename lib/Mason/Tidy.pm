@@ -52,7 +52,7 @@ method perl_block_names () {
 }
 
 method mixed_block_names () {
-    return qw(after augment around before def filter method override);
+    return qw(after augment around before def method override);
 }
 
 method tidy ($source) {
@@ -80,12 +80,12 @@ method tidy_method ($source) {
             $add_element->( 'perl_line', $line );
             next;
         }
-        if ( my ($block_type) = ( $line =~ $open_block_regex ) ) {
+        if ( my ( $block_type, $block_args ) = ( $line =~ $open_block_regex ) ) {
             my $end_line = $self->capture_block( \@lines, $block_type, $cur_line + 1, $last_line );
             my $block_contents = join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
             $block_contents = join( "\n",
                 $lines[$cur_line],
-                grep { /\S/ } $self->handle_block( $block_type, $block_contents ),
+                grep { /\S/ } $self->handle_block( $block_type, $block_args, $block_contents ),
                 $lines[$end_line] );
             $add_element->( 'block', $block_contents );
             $cur_line = $end_line;
@@ -152,8 +152,10 @@ method capture_block ($lines, $block_type, $cur_line, $last_line) {
     die "could not find matching </%$block_type> after line $cur_line";
 }
 
-method handle_block ($block_type, $block_contents) {
-    if ( $self->_is_perl_block->{$block_type} ) {
+method handle_block ($block_type, $block_args, $block_contents) {
+    if ( $self->_is_perl_block->{$block_type}
+        || ( $block_type eq 'filter' && !defined($block_args) ) )
+    {
         $block_contents = trim_lines($block_contents);
         $self->perltidy(
             source      => \$block_contents,
@@ -164,7 +166,9 @@ method handle_block ($block_type, $block_contents) {
         my $spacer = scalar( ' ' x $self->indent_perl_block );
         $block_contents =~ s/^/$spacer/mg;
     }
-    elsif ( $self->_is_mixed_block->{$block_type} ) {
+    elsif ( $self->_is_mixed_block->{$block_type}
+        || ( $block_type eq 'filter' && defined($block_args) ) )
+    {
         $block_contents = $self->tidy_method($block_contents);
     }
     return $block_contents;

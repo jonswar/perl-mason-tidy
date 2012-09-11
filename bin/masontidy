@@ -72,7 +72,7 @@ For example, this:
       <li>
           <%2+(3-4)*6%>
       </li>
-      <li><%  foo($.bar,$.baz,  $.bleah)   %></li>
+      <li><%  foo($.bar,$.baz,  $.bleah)%></li>
     %}
       </ul>
     %}
@@ -96,10 +96,11 @@ becomes this:
       </ul>
     %}
     </body>
-    
+
     <%init>
     my @articles =
-      @{ Blog::Article::Manager->get_articles( sort_by => "create_time", limit => 5 ) };
+      @{ Blog::Article::Manager->get_articles
+         ( sort_by => "create_time", limit => 5 ) };
     </%init>  
 
 This illustrates the three varieties of Perl in a component that can be tidied:
@@ -108,15 +109,14 @@ This illustrates the three varieties of Perl in a component that can be tidied:
 
 =item Perl blocks
 
-Blocks of Perl delimited by C<< <%init> >>, C<< <%perl> >>, C<< <%once> >>
-(Mason 1), C<< <%shared> >> (Mason 1), or C<< <%class> >> (Mason 2). These are
+Blocks of Perl delimited by C<< <%init> >>, C<< <%perl> >>, etc.  These are
 tidied in isolation from one another.
 
 =item Perl lines
 
 Lines beginning with C<%>. These are indented relative to each other regardless
-of intervening non-Perl content, e.g. the C<foreach> above is indented inside
-the C<if>.
+of intervening non-Perl content, e.g. in the example above, the C<foreach> is
+indented inside the C<if>.
 
 By default, Perl lines are indented with 2 spaces instead of the normal 4
 spaces. This can be overriden with L</--perltidy-line-argv>.
@@ -125,9 +125,12 @@ A given %-line will never be split up into multiple %-lines regardless of how
 long it is.  This is a limitation of the implementation and may change in the
 future.
 
+A single space is inserted after the '%' if it doesn't already exist.
+
 =item Substitution tags
 
-Perl expressions inside C<< <% %> >>.
+Perl expressions inside C<< <% %> >>. A single space is inserted before and
+after the tidied expression.
 
 =back
 

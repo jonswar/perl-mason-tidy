@@ -19,7 +19,7 @@ sub tidy {
         is( $dest, undef, "no dest returned - $desc" );
     }
     else {
-        ok( !defined($err), "no error - $desc" );
+        is( $err, '', "no error - $desc" );
         is( trim($dest), trim( $params{expect} ), "expected content - $desc" );
     }
 }
@@ -132,6 +132,52 @@ sub test_filter_invoke : Tests {
 %     }}
 %   }}
 % }}
+'
+    );
+}
+
+sub test_filter_decl : Tests {
+    tidy(
+        desc   => 'Mason 1 filter declaration (no arg)',
+        source => '
+Hi
+
+<%filter>
+if (/abc/) {
+s/abc/def/;
+}
+</%filter>
+',
+        expect => '
+Hi
+
+<%filter>
+  if (/abc/) {
+      s/abc/def/;
+  }
+</%filter>
+'
+    );
+
+    tidy(
+        desc   => 'Mason 2 filter declaration (w/ arg)',
+        source => '
+<%filter Item ($class)>
+<li class="<%$class%>">
+%if (my $x = $yield->()) {
+<% $x %>
+%}
+</li>
+</%filter>
+',
+        expect => '
+<%filter Item ($class)>
+<li class="<% $class %>">
+% if ( my $x = $yield->() ) {
+<% $x %>
+% }
+</li>
+</%filter>
 '
     );
 }
