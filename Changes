@@ -2,7 +2,10 @@ Revision history for Mason-Tidy
 
 ** denotes an incompatible change
 
-0.02  Sep 12, 2012
+2.50  Sep 12, 2012
+
+- Increase version number to avoid indexing problems; a Mason/Tidy.pm was accidentally
+released with a number of Mason 2 distributions (up to 2.15).
 
 0.01  Sep 12, 2012
 
