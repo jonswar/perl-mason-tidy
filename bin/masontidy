@@ -220,8 +220,8 @@ errors.
 
 =head1 LIBRARY API
 
-You can use L<Mason::Tidy|Mason::Tidy> to use this facility from inside another
-Perl script/library.
+You can use the L<Mason::Tidy|Mason::Tidy> API from inside another Perl
+script/library instead of calling out to this script.
 
 =head1 CAVEATS / KNOWN BUGS
 
@@ -229,7 +229,7 @@ Perl script/library.
 
 =item *
 
-A %-line or C<< <% %> >> tag will never be split up into multiple lines
+A C<< %-line >> or C<< <% %> >> tag will never be split up into multiple lines
 regardless of how long it is.
 
 =item *
