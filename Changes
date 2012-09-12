@@ -4,8 +4,8 @@ Revision history for Mason-Tidy
 
 2.50  Sep 12, 2012
 
-- Increase version number to avoid indexing problems; a Mason/Tidy.pm was accidentally
-released with a number of Mason 2 distributions (up to 2.15).
+- Increase version number to avoid indexing problems w/old Mason 2 distributions
+- Declare --perltidy-argv, etc., to take a string value
 
 0.01  Sep 12, 2012
 
