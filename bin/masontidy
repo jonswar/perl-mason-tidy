@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 use Getopt::Long;
+use File::Slurp;
 use Mason::Tidy;
 use Pod::Usage;
 use strict;
@@ -26,10 +27,12 @@ usage() if !@ARGV;
 Pod::Usage::pod2usage( { verbose => 2 } ) if $help;
 die "must pass -r/--replace with multiple filenames" if @ARGV > 1;
 
+%params = map { ( $_, $params{$_} ) } grep { defined( $params{$_} ) } keys(%params);
+
 my $mt = Mason::Tidy->new(%params);
 foreach my $file (@ARGV) {
     my $source = read_file($file);
-    my $dest   = Mason::Tidy->tidy($source);
+    my $dest   = $mt->tidy($source);
     if ($replace) {
         write_file( $file, $dest );
     }
