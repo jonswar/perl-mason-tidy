@@ -70,7 +70,7 @@ other non-Perl content in a component.
 For example, this:
 
     <body>
-    %if ( $contents || $allow_empty ) {
+    %if($contents||$allow_empty) {
       <ul>
     %foreach my $line (@lines) {
       <li>
