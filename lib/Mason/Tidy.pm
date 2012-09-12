@@ -1,7 +1,5 @@
 package Mason::Tidy;
 use File::Slurp;
-use IO::Scalar;
-use IPC::Run;
 use Method::Signatures::Simple;
 use Moo;
 use Perl::Tidy qw();
