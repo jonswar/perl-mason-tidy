@@ -31,25 +31,6 @@ sub trim {
     return $str;
 }
 
-sub test_long_line : Tests {
-    tidy(
-        desc   => 'init section',
-        source => '
-<%init>
-my $form_data = delete( $m->req->session->{form_data} );
-my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
-</%init>
-',
-        expect => '
-<%init>
-  my $form_data = delete( $m->req->session->{form_data} );
-  my @articles =
-    @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
-</%init>
-'
-    );
-}
-
 sub test_perl_sections : Tests {
     tidy(
         desc   => 'init section',
