@@ -36,15 +36,16 @@ sub test_perl_sections : Tests {
         desc   => 'init section',
         source => '
 <%init>
-my $form_data = delete( $m->req->session->{form_data} );
-my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
+if($foo  )   {  
+my @ids = (1,2);
+    }  
 </%init>
 ',
         expect => '
 <%init>
-  my $form_data = delete( $m->req->session->{form_data} );
-  my @articles =
-    @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
+  if ($foo) {
+      my @ids = ( 1, 2 );
+  }
 </%init>
 '
     );
@@ -99,13 +100,13 @@ sub test_perl_lines : Tests {
     tidy(
         desc   => 'perl lines',
         source => '
-%if ($foo  )   {  
-%my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
+%if($foo  )   {  
+%my @ids = (1,2);
 %    }  
 ',
         expect => '
 % if ($foo) {
-%   my @articles = @{ Blog::Article::Manager->get_articles( sort_by => "create_time DESC", limit => 5 ) };
+%   my @ids = ( 1, 2 );
 % }
 '
     );
@@ -120,7 +121,8 @@ sub test_tags : Tests {
     tidy(
         desc   => 'comp call tag',
         source => '<&/foo/bar,a=>5,b=>6&> text <&  $comp_path, str=>"foo"&>',
-        expect => '<& /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
+        expect =>
+          '<& /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
     );
 }
 
