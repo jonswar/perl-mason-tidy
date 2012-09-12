@@ -11,9 +11,9 @@ sub tidy {
     my $desc    = $params{desc} or die "desc required";
     my $options = $params{options} || {};
 
-    my $mt   = Mason::Tidy->new(%$options);
+    my $mt = Mason::Tidy->new( %$options, perltidy_argv => '' );
     my $dest = eval { $mt->tidy($source) };
-    my $err  = $@;
+    my $err = $@;
     if ( my $expect_error = $params{expect_error} ) {
         like( $err, $expect_error, "got error - $desc" );
         is( $dest, undef, "no dest returned - $desc" );
@@ -120,7 +120,8 @@ sub test_tags : Tests {
     tidy(
         desc   => 'comp call tag',
         source => '<&/foo/bar,a=>5,b=>6&> text <&  $comp_path, str=>"foo"&>',
-        expect => '<& /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
+        expect =>
+          '<& /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
     );
 }
 
