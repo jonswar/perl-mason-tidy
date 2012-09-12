@@ -305,7 +305,7 @@ You can call this API from your own program instead of executing C<masontidy>.
 =item perltidy_subst_argv
 
 These options are the same as the equivalent C<masontidy> command-line options,
-replacing dashes with underscore (e.g. the C<indent-per-block> option becomes
+replacing dashes with underscore (e.g. the C<--indent-per-block> option becomes
 C<indent_perl_block> here).
 
 =back
@@ -316,7 +316,8 @@ C<indent_perl_block> here).
 
 =item tidy ($source)
 
-Tidy component source I<$source> and return the result.
+Tidy component source I<$source> and return the tidied result. Throw fatal
+error if source cannot be tidied (e.g. invalid syntax).
 
 =back
 

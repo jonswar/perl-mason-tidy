@@ -52,12 +52,12 @@ masontidy - Tidy HTML::Mason / Mason components
 
 =head1 SYNOPSIS
 
-    # Tidy component, write to standard output
-    #
+    Tidy component, write to standard output:
+
     % masontidy file.mc
 
-    # Process file(s) in place
-    #
+    Process component(s) in place:
+
     % masontidy -r file1.mc [file2.mc ...]
 
 =head1 DESCRIPTION
@@ -107,30 +107,30 @@ becomes this:
          ( sort_by => "create_time", limit => 5 ) };
     </%init>  
 
-This illustrates the three varieties of Perl in a component that can be tidied:
+This shows the three main categories of Perl in a component that can be tidied:
 
 =over
 
-=item Perl blocks
+=item *
 
-Blocks of Perl delimited by C<< <%init> >>, C<< <%perl> >>, etc.  These are
-tidied in isolation from one another.
+B<Perl blocks>. C<< <%init> >>, C<< <%perl> >>, etc.  These are tidied in
+isolation from one another.
 
-=item Perl lines
+=item *
 
-Lines beginning with C<%>. These are indented relative to each other regardless
-of intervening non-Perl content, e.g. in the example above, the C<foreach> is
-indented inside the C<if>.
+B<%-lines>. These are indented relative to each other regardless of intervening
+non-Perl content, e.g. in the example above, the C<foreach> is indented inside
+the C<if>.
 
 By default, Perl lines are indented with 2 spaces instead of the normal 4
 spaces. This can be overriden with L</--perltidy-line-argv>.
 
 A single space is inserted after the '%'.
 
-=item Substitution and component call tags
+=item *
 
-Perl expressions inside C<< <% %> >> and C<< <& &> >> tags. A single space is
-inserted before and after the tidied expression if there isn't one already.
+B<Perl expressions> inside C<< <% %> >> and C<< <& &> >> tags. A single space
+is inserted before and after the tidied expression if there isn't one already.
 
 =back
 
@@ -187,7 +187,9 @@ default, 4 spaces).
 
 =item --perltidy-argv
 
-C<perltidy> arguments to use everywhere.
+C<perltidy> arguments to use everywhere. e.g.
+
+    --perltidy-argv="-noll -l=78"
 
 =item --perltidy-line-argv
 
@@ -211,8 +213,15 @@ Print help message
 
 =head1 ERRORS
 
-Will throw a fatal error if a file cannot be processed, generally because
-perltidy encountered bad Perl syntax.
+Will throw a fatal error if a file cannot be tidied, such as when perltidy
+encounters bad Perl syntax. However, C<masontidy> is not intended to be, and
+should not be considered, a validator; it will remain silent on many syntax
+errors.
+
+=head1 LIBRARY API
+
+You can use L<Mason::Tidy|Mason::Tidy> to use this facility from inside another
+Perl script/library.
 
 =head1 CAVEATS / KNOWN BUGS
 
