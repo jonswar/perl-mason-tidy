@@ -127,10 +127,10 @@ spaces. This can be overriden with L</--perltidy-line-argv>.
 
 A single space is inserted after the '%'.
 
-=item Substitution tags
+=item Substitution and component call tags
 
-Perl expressions inside C<< <% %> >>. A single space is inserted before and
-after the tidied expression.
+Perl expressions inside C<< <% %> >> and C<< <& &> >> tags. A single space is
+inserted before and after the tidied expression if there isn't one already.
 
 =back
 

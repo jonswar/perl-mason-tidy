@@ -111,6 +111,19 @@ sub test_perl_lines : Tests {
     );
 }
 
+sub test_tags : Tests {
+    tidy(
+        desc   => 'subst tag',
+        source => '<%$x%> text <%foo(5,6)%>',
+        expect => '<% $x %> text <% foo( 5, 6 ) %>',
+    );
+    tidy(
+        desc   => 'comp call tag',
+        source => '<&/foo/bar,a=>5,b=>6&> text <&  $comp_path, str=>"foo"&>',
+        expect => '<& /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
+    );
+}
+
 sub test_filter_invoke : Tests {
     tidy(
         desc   => 'filter invoke',
@@ -311,6 +324,8 @@ andthat();
 some filtered text
 %}}
 
+<&footer,color=>"blue",height  =>  3&>
+
 <%method foo>
 %if(defined($bar)) {
 % if  ( $write_list) {
@@ -340,6 +355,8 @@ some text
 % $.Filter( 3, 2 ) {{
 some filtered text
 % }}
+
+<& footer, color => "blue", height => 3 &>
 
 <%method foo>
 % if ( defined($bar) ) {

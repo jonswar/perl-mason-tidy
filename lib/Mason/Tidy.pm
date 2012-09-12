@@ -147,7 +147,11 @@ method tidy_method ($source) {
     # Tidy Perl in <% %> tags
     #
     my $subst_tag_regex = $self->_subst_tag_regex;
-    $final =~ s/$subst_tag_regex/'<% ' . $self->tidy_subst_expr($1) . ' %>'/ge;
+    $final =~ s/$subst_tag_regex/"<% " . $self->tidy_subst_expr($1) . " %>"/ge;
+
+    # Tidy Perl in <% %> tags
+    #
+    $final =~ s/<&(.*?)&>/"<& " . $self->tidy_compcall_expr($1) . " &>"/ge;
 
     return $final;
 }
@@ -158,6 +162,22 @@ method tidy_subst_expr ($expr) {
         destination => \my $tidied_expr,
         argv        => $self->perltidy_tag_argv,
     );
+    return trim($tidied_expr);
+}
+
+method tidy_compcall_expr ($expr) {
+    my $path;
+    if ( ($path) = ( $expr =~ /^(\s*[\w\/\.][^,]+)/ ) ) {
+        substr( $expr, 0, length($path) ) = "'$path'";
+    }
+    $self->perltidy(
+        source      => \$expr,
+        destination => \my $tidied_expr,
+        argv        => $self->perltidy_tag_argv,
+    );
+    if ($path) {
+        substr( $tidied_expr, 0, length($path) + 2 ) = $path;
+    }
     return trim($tidied_expr);
 }
 
