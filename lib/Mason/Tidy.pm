@@ -234,8 +234,6 @@ method restore ($marker) {
 
 method perltidy (%params) {
     $params{argv} .= ' ' . $self->perltidy_argv;
-    use d;
-    dp \%params;
     my $errorfile;
     Perl::Tidy::perltidy(
         prefilter  => \&perltidy_prefilter,
