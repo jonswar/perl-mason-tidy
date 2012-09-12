@@ -27,7 +27,8 @@ usage() if !@ARGV;
 Pod::Usage::pod2usage( { verbose => 2 } ) if $help;
 die "must pass -r/--replace with multiple filenames" if @ARGV > 1;
 
-%params = map { ( $_, $params{$_} ) } grep { defined( $params{$_} ) } keys(%params);
+%params =
+  map { ( $_, $params{$_} ) } grep { defined( $params{$_} ) } keys(%params);
 
 my $mt = Mason::Tidy->new(%params);
 foreach my $file (@ARGV) {
@@ -124,11 +125,7 @@ indented inside the C<if>.
 By default, Perl lines are indented with 2 spaces instead of the normal 4
 spaces. This can be overriden with L</--perltidy-line-argv>.
 
-A given %-line will never be split up into multiple %-lines regardless of how
-long it is.  This is a limitation of the implementation and may change in the
-future.
-
-A single space is inserted after the '%' if it doesn't already exist.
+A single space is inserted after the '%'.
 
 =item Substitution tags
 
@@ -216,5 +213,24 @@ Print help message
 
 Will throw a fatal error if a file cannot be processed, generally because
 perltidy encountered bad Perl syntax.
+
+=head1 CAVEATS / KNOWN BUGS
+
+=over
+
+=item *
+
+A %-line or C<< <% %> >> tag will never be split up into multiple lines
+regardless of how long it is.
+
+=item *
+
+C<< <% %> >> tags that span multiple lines are ignored.
+
+=item *
+
+Blocks that begin and end on the same line are ignored.
+
+=back
 
 =cut
