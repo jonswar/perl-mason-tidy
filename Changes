@@ -2,7 +2,7 @@ Revision history for Mason-Tidy
 
 ** denotes an incompatible change
 
-2.51  Sep 12, 2012
+2.51  Sep 14, 2012
 
 - Add get_options to parse argv outside CLI
 - Add Test::Class::Most dependency
