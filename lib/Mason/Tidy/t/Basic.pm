@@ -1,9 +1,6 @@
 package Mason::Tidy::t::Basic;
 use Mason::Tidy;
-use Test::More;
-use strict;
-use warnings;
-use base qw(Test::Class);
+use Test::Class::Most parent => 'Test::Class';
 
 sub tidy {
     my %params  = @_;
@@ -121,8 +118,7 @@ sub test_tags : Tests {
     tidy(
         desc   => 'comp call tag',
         source => '<&/foo/bar,a=>5,b=>6&> text <&  $comp_path, str=>"foo"&>',
-        expect =>
-          '<& /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
+        expect => '<& /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
     );
 }
 

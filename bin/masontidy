@@ -13,22 +13,12 @@ sub usage {
     Pod::Usage::pod2usage( { verbose => 1, output => \*STDERR } );
 }
 
-my ( $help, $replace, %params );
-GetOptions(
-    'h|help'                => \$help,
-    'r|replace'             => \$replace,
-    'indent-perl-block'     => \$params{indent_perl_block},
-    'perltidy-argv=s'       => \$params{perltidy_argv},
-    'perltidy-block-argv=s' => \$params{perltidy_block_argv},
-    'perltidy-line-argv=s'  => \$params{perltidy_line_argv},
-    'perltidy-subst-argv=s' => \$params{perltidy_subst_argv},
-) or usage();
+my %params;
+Mason::Tidy->get_options( \@ARGV, \%params ) or usage();
+Pod::Usage::pod2usage( { '-verbose' => 2 } ) if delete( $params{help} );
 usage() if !@ARGV;
-Pod::Usage::pod2usage( { verbose => 2 } ) if $help;
-die "must pass -r/--replace with multiple filenames" if @ARGV > 1;
-
-%params =
-  map { ( $_, $params{$_} ) } grep { defined( $params{$_} ) } keys(%params);
+my $replace = delete( $params{replace} );
+die "must pass -r/--replace with multiple filenames" if @ARGV > 1 && !$replace;
 
 my $mt = Mason::Tidy->new(%params);
 foreach my $file (@ARGV) {
