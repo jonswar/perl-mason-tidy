@@ -4,6 +4,8 @@ Revision history for Mason-Tidy
 
 2.52  Sep 14, 2012
 
+- Default --indent-perl-block to 0
+
 2.51  Sep 14, 2012
 
 - Fix various bugs in CLI
