@@ -4,6 +4,8 @@ Revision history for Mason-Tidy
 
 2.51  Sep 14, 2012
 
+- Fix various bugs in CLI
+- Use --noprofile in tests so that user's .perltidyrc doesn't break tests [Pedro Melo]
 - Add get_options to parse argv outside CLI
 - Add Test::Class::Most dependency
 

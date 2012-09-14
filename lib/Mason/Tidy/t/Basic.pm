@@ -8,7 +8,7 @@ sub tidy {
     my $desc    = $params{desc} or die "desc required";
     my $options = $params{options} || {};
 
-    my $mt = Mason::Tidy->new( %$options, perltidy_argv => '' );
+    my $mt = Mason::Tidy->new( %$options, perltidy_argv => '--noprofile' );
     my $dest = eval { $mt->tidy($source) };
     my $err = $@;
     if ( my $expect_error = $params{expect_error} ) {
