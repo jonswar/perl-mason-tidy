@@ -10,7 +10,7 @@ use warnings;
 my $marker_count = 0;
 
 # Public
-has 'indent_perl_block'   => ( is => 'ro', default => sub { 0 } );
+has 'indent_perl_block'   => ( is => 'ro', default => sub { 2 } );
 has 'perltidy_argv'       => ( is => 'ro', default => sub { '' } );
 has 'perltidy_block_argv' => ( is => 'ro', default => sub { '' } );
 has 'perltidy_line_argv'  => ( is => 'ro', default => sub { '-i=2' } );

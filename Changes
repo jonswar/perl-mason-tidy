@@ -4,7 +4,6 @@ Revision history for Mason-Tidy
 
 2.52  Sep 15, 2012
 
-- Default --indent-perl-block to 0
 - Add missing dependencies Capture::Tiny, File::Temp, IPC::System::Simple
 
 2.51  Sep 14, 2012
