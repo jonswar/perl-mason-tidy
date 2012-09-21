@@ -2,6 +2,8 @@ Revision history for Mason-Tidy
 
 ** denotes an incompatible change
 
+2.54  Sep 20, 2012
+
 2.53  Sep 20, 2012
 
 - Tidy <%perl> blocks and %-lines together [Shane McCarron]
