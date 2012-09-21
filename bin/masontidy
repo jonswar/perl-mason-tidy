@@ -63,6 +63,7 @@ For example, this:
     %if($contents||$allow_empty) {
       <ul>
     %foreach my $line (@lines) {
+    %chomp($line);
       <li>
           <%2+(3-4)*6%>
       </li>
@@ -81,12 +82,13 @@ becomes this:
     <body>
     % if ( $contents || $allow_empty ) {
       <ul>
-    %   foreach my $line (@lines) {
+    %     foreach my $line (@lines) {
+    %         chomp($line);
       <li>
           <% 2 + ( 3 - 4 ) * 6 %>
       </li>
       <li><% foo( $.bar, $.baz, $.bleah) %></li>
-    %   }
+    %     }
       </ul>
     %}
     </body>
@@ -97,30 +99,24 @@ becomes this:
          ( sort_by => "create_time", limit => 5 ) };
     </%init>  
 
-This shows the three main categories of Perl in a component that can be tidied:
+=head2 What gets tidied
 
 =over
 
 =item *
 
-B<Perl blocks>. C<< <%init> >>, C<< <%perl> >>, etc.  These are tidied in
-isolation from one another.
+B<%-lines and C<< <%perl> >> blocks>. These are indented relative to each other
+regardless of intervening non-Perl content, e.g. note the indentation of the
+C<foreach> and C<chomp> lines above.
 
 =item *
 
-B<%-lines>. These are indented relative to each other regardless of intervening
-non-Perl content, e.g. in the example above, the C<foreach> is indented inside
-the C<if>.
-
-By default, Perl lines are indented with 2 spaces instead of the normal 4
-spaces. This can be overriden with L</--perltidy-line-argv>.
-
-A single space is inserted after the '%'.
+B<Other code blocks>. C<< <%init> >>, C<< <%once> >>, C<< <%class> >>, and C<<
+<%filter> >> blocks are tidied in isolation from one another.
 
 =item *
 
-B<Perl expressions> inside C<< <% %> >> and C<< <& &> >> tags. A single space
-is inserted before and after the tidied expression if there isn't one already.
+B<Perl expressions> inside C<< <% %> >> and C<< <& &> >> tags.
 
 =back
 
@@ -155,16 +151,32 @@ Modify file(s) in place instead of sending to standard output.
 
 =item --indent-perl-block
 
-Number of spaces to initially indent all lines inside a block of Perl. The
-default is 2:
+Number of spaces to initially indent all lines inside C<< <%perl> >> blocks.
+The default is 2, so as to align with %-lines:
 
-    <%init>
+    % my $foo = get_foo();
+    <%perl>
       if ($foo) {
           $bar = 6;
       }
-    </%init>
+    </%perl>
 
 With --indent-perl-block 0:
+
+    % my $foo = get_foo();
+    <%perl>
+    if ($foo) {
+        $bar = 6;
+    }
+    </%perl>
+
+Note that this is independent from perltidy's indentation settings.
+
+=item --indent-block
+
+Number of spaces to initially indent all lines inside code blocks other than
+C<< <%perl> >> (C<< <%init> >>, C<< <%class> >>, C<< <%once> >>, and C<<
+<%filter> >>).  The default is 0:
 
     <%init>
     if ($foo) {
@@ -172,7 +184,13 @@ With --indent-perl-block 0:
     }
     </%init>
 
-Note that this is independent from perltidy's indentation settings.
+With --indent-block 2:
+
+    <%init>
+      if ($foo) {
+          $bar = 6;
+      }
+    </%init>
 
 =item --perltidy-argv
 
@@ -184,19 +202,13 @@ or
 
     --perltidy-argv " -noll -l=78"
 
-
 =item --perltidy-line-argv
 
-Additional C<perltidy> arguments to use for Perl lines. Defaults to "-i=2"
-(indent 2 characters instead of the usual 4). You can pass "-i=4" or " " (a
-string with just a space) to eliminate this exception.
-
-    --perltidy-line-argv "-i=4"
-    --perltidy-line-argv " "
+Additional C<perltidy> arguments to use for Perl lines.
 
 =item --perltidy-block-argv
 
-Additional C<perltidy> arguments to use for Perl blocks.
+Additional C<perltidy> arguments to use for code blocks.
 
 =item --perltidy-tag-argv
 
@@ -226,8 +238,8 @@ script/library instead of calling out to this script.
 
 =item *
 
-A C<< %-line >> or C<< <% %> >> tag will never be split up into multiple lines
-regardless of how long it is.
+C<< <%perl> >> and C<< </%perl> >> tags must be on their own line, or else
+their inner content will not be tidied.
 
 =item *
 
@@ -235,7 +247,8 @@ C<< <% %> >> tags that span multiple lines are ignored.
 
 =item *
 
-Blocks that begin and end on the same line are ignored.
+A C<< %-line >> or C<< <% %> >> tag or any line inside a C<< <%perl> >> section
+will never be split up into multiple lines regardless of how long it is.
 
 =back
 

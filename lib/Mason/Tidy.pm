@@ -10,15 +10,16 @@ use warnings;
 my $marker_count = 0;
 
 # Public
+has 'indent_block'        => ( is => 'ro', default => sub { 0 } );
 has 'indent_perl_block'   => ( is => 'ro', default => sub { 2 } );
 has 'perltidy_argv'       => ( is => 'ro', default => sub { '' } );
 has 'perltidy_block_argv' => ( is => 'ro', default => sub { '' } );
-has 'perltidy_line_argv'  => ( is => 'ro', default => sub { '-i=2' } );
+has 'perltidy_line_argv'  => ( is => 'ro', default => sub { '' } );
 has 'perltidy_tag_argv'   => ( is => 'ro', default => sub { '' } );
 
 # Private
+has '_is_code_block'    => ( is => 'lazy' );
 has '_is_mixed_block'   => ( is => 'lazy' );
-has '_is_perl_block'    => ( is => 'lazy' );
 has '_marker_prefix'    => ( is => 'ro', default => sub { '__masontidy__' } );
 has '_open_block_regex' => ( is => 'lazy' );
 has '_subst_tag_regex'  => ( is => 'lazy' );
@@ -27,27 +28,27 @@ method _build__is_mixed_block () {
     return { map { ( $_, 1 ) } $self->mixed_block_names };
 }
 
-method _build__is_perl_block () {
-    return { map { ( $_, 1 ) } $self->perl_block_names };
+method _build__is_code_block () {
+    return { map { ( $_, 1 ) } $self->code_block_names };
 }
 
 method _build__open_block_regex () {
-    my $re = '^\s*<%(' . join( '|', $self->block_names ) . ')(\s+\w+)?>\s*$';
+    my $re = '<%(' . join( '|', $self->block_names ) . ')(\s+\w+)?>';
     return qr/$re/;
 }
 
 method _build__subst_tag_regex () {
-    my $re = '<%(?!' . join( '|', $self->block_names ) . ')(.*?)%>';
+    my $re = '<%(?!' . join( '|', $self->block_names, 'perl' ) . ')(.*?)%>';
     return qr/$re/;
 }
 
 method block_names () {
     return
-      qw(after args around attr augment before class cleanup def doc filter flags init method once override perl shared text);
+      qw(after args around attr augment before class cleanup def doc filter flags init method once override shared text);
 }
 
-method perl_block_names () {
-    return qw(class init once perl shared);
+method code_block_names () {
+    return qw(class init once shared);
 }
 
 method mixed_block_names () {
@@ -60,6 +61,7 @@ method get_options ($class: $argv, $params_ref) {
         $argv,
         'h|help'                => \$params{help},
         'r|replace'             => \$params{replace},
+        'indent-block=i'        => \$params{indent_block},
         'indent-perl-block=i'   => \$params{indent_perl_block},
         'perltidy-argv=s'       => \$params{perltidy_argv},
         'perltidy-block-argv=s' => \$params{perltidy_block_argv},
@@ -76,48 +78,47 @@ method tidy ($source) {
 }
 
 method tidy_method ($source) {
-    my @lines            = split( /\n/, $source );
-    my @elements         = ();
-    my $add_element      = sub { push( @elements, [@_] ) };
-    my $open_block_regex = $self->_open_block_regex;
+    my @lines       = split( /\n/, $source );
+    my @elements    = ();
+    my $add_element = sub { push( @elements, [@_] ) };
 
     my $last_line = scalar(@lines) - 1;
+
     for ( my $cur_line = 0 ; $cur_line <= $last_line ; $cur_line++ ) {
         my $line = $lines[$cur_line];
 
         # Begin Mason 2 filter invocation
         #
         if ( $line =~ /^%\s*(.*)\{\{\s*/ ) {
-            $add_element->( 'perl_line', "% given (__filter($1)) {" );
+            $add_element->( 'perl_line', "given (__filter($1)) {" );
             next;
         }
 
         # End Mason 2 filter invocation
         #
         if ( $line =~ /^%\s*\}\}\s*/ ) {
-            $add_element->( 'perl_line', "% } # __end filter" );
+            $add_element->( 'perl_line', "} # __end filter" );
             next;
         }
 
         # %-line
         #
         if ( $line =~ /^%/ ) {
-            $add_element->( 'perl_line', $line );
+            $add_element->( 'perl_line', substr( $line, 1 ) );
             next;
         }
 
-        # Block start and end, each on their own line
+        # <%perl> block, with both <%perl> and </%perl> on their own lines
         #
-        if ( my ( $block_type, $block_args ) = ( $line =~ /$open_block_regex/m ) ) {
-            if ( my $end_line =
-                $self->capture_block( \@lines, $block_type, $cur_line + 1, $last_line ) )
-            {
-                my $block_contents = join( "\n", @lines[ $cur_line + 1 .. $end_line - 1 ] );
-                $block_contents = join( "\n",
-                    $lines[$cur_line],
-                    grep { /\S/ } $self->handle_block( $block_type, $block_args, $block_contents ),
-                    $lines[$end_line] );
-                $add_element->( 'block', $block_contents );
+        if ( $line =~ /^\s*<%perl>\s*$/ ) {
+            my ($end_line) =
+              grep { $lines[$_] =~ /^\s*<\/%perl>\s*$/ } ( $cur_line + 1 .. $last_line );
+            if ($end_line) {
+                $add_element->( 'text', '<%perl>' );
+                foreach my $line ( @lines[ $cur_line + 1 .. $end_line - 1 ] ) {
+                    $add_element->( 'perl_line', "$line # __perl_block" );
+                }
+                $add_element->( 'text', '</%perl>' );
                 $cur_line = $end_line;
                 next;
             }
@@ -125,40 +126,65 @@ method tidy_method ($source) {
 
         # Everything else goes untouched
         #
-        $add_element->( 'text_line', $line );
+        $add_element->( 'text', $line );
     }
 
     # Create content from elements with non-perl lines as comments; perltidy;
     # reassemble list of elements from tidied perl blocks and replaced elements
     #
-    my $untidied_perl = join(
-        "\n",
-        map {
-            $_->[0] eq 'perl_line'
-              ? trim( substr( $_->[1], 1 ) )
-              : $self->replace_with_perl_comment($_)
-        } @elements
-    );
+    my $untidied_perl = join( "\n",
+        map { $_->[0] eq 'perl_line' ? trim( $_->[1] ) : $self->replace_with_perl_comment($_) }
+          @elements );
     $self->perltidy(
         source      => \$untidied_perl,
         destination => \my $tidied_perl,
         argv        => $self->perltidy_line_argv . " -fnl -fbl",
     );
 
-    @elements = ();
+    my @final_lines = ();
     foreach my $line ( split( /\n/, $tidied_perl ) ) {
         if ( my $marker = $self->marker_in_line($line) ) {
-            $add_element->( @{ $self->restore($marker) } );
+            push( @final_lines, $self->restore($marker)->[1] );
         }
         else {
             # Convert back filter invocation
             #
             $line =~ s/given\s*\(\s*__filter\s*\(\s*(.*?)\s*\)\s*\)\s*\{/$1 \{\{/;
             $line =~ s/\}\s*\#\s*__end filter/\}\}/;
-            $add_element->( 'perl_line', "% " . $line );
+
+            if ( my ($real_line) = ( $line =~ /(.*?)\s*\#\s*__perl_block/ ) ) {
+                my $spacer = scalar( ' ' x $self->indent_perl_block );
+                push( @final_lines, $spacer . rtrim($real_line) );
+            }
+            else {
+                push( @final_lines, "% " . $line );
+            }
         }
     }
-    my $final = join( "\n", map { $_->[1] } @elements );
+    my $final = join( "\n", @final_lines );
+
+    # Tidy content in blocks other than <%perl>
+    #
+    my %replacements;
+    my $open_block_regex = $self->_open_block_regex;
+    undef pos($final);
+    while ( $final =~ /$open_block_regex[\t ]*\n?/mg ) {
+        my ( $block_type, $block_args ) = ( $1, $2 );
+        my $start_pos = pos($final);
+        if ( $final =~ /(\n?[\t ]*<\/%$block_type>)/g ) {
+            my $length = pos($final) - $start_pos - length($1);
+            my $block_contents = substr( $final, $start_pos, $length );
+            $replacements{$block_contents} =
+              $self->handle_block( $block_type, $block_args, $block_contents );
+        }
+        else {
+            die sprintf( "no matching end tag for '<%%%s%s>' at char %d",
+                $block_type, $block_args || '', $start_pos );
+        }
+    }
+    while ( my ( $src, $dest ) = each(%replacements) ) {
+        $final =~ s/\Q$src\E/$dest/;
+    }
 
     # Tidy Perl in <% %> tags
     #
@@ -197,17 +223,8 @@ method tidy_compcall_expr ($expr) {
     return trim($tidied_expr);
 }
 
-method capture_block ($lines, $block_type, $cur_line, $last_line) {
-    foreach my $this_line ( $cur_line .. $last_line ) {
-        if ( $lines->[$this_line] =~ m{</%$block_type>} ) {
-            return $this_line;
-        }
-    }
-    return undef;
-}
-
 method handle_block ($block_type, $block_args, $block_contents) {
-    if ( $self->_is_perl_block->{$block_type}
+    if ( $self->_is_code_block->{$block_type}
         || ( $block_type eq 'filter' && !defined($block_args) ) )
     {
         $block_contents = trim_lines($block_contents);
@@ -217,7 +234,7 @@ method handle_block ($block_type, $block_args, $block_contents) {
             argv        => $self->perltidy_block_argv
         );
         $block_contents = trim($tidied_block_contents);
-        my $spacer = scalar( ' ' x $self->indent_perl_block );
+        my $spacer = scalar( ' ' x $self->indent_block );
         $block_contents =~ s/^/$spacer/mg;
     }
     elsif ( $self->_is_mixed_block->{$block_type}
@@ -276,6 +293,11 @@ func perltidy_postfilter ($buf) {
 
 func trim ($str) {
     for ($str) { s/^\s+//; s/\s+$// }
+    return $str;
+}
+
+func rtrim ($str) {
+    for ($str) { s/\s+$// }
     return $str;
 }
 

@@ -4,6 +4,11 @@ Revision history for Mason-Tidy
 
 2.53  Sep 15, 2012
 
+- Tidy <%perl> blocks and %-lines together [Shane McCarron]
+- Indent <%perl> blocks initially by 2 spaces, others by 0 by default
+- Use default perltidy settings (4 space indentation) for %-lines
+- Handle non-<%perl> blocks even when tags are not on their own lines
+
 2.52  Sep 15, 2012
 
 - Add missing dependencies Capture::Tiny, File::Temp, IPC::System::Simple
