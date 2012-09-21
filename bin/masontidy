@@ -212,7 +212,11 @@ Additional C<perltidy> arguments to use for code blocks.
 
 =item --perltidy-tag-argv
 
-Additional C<perltidy> arguments to use for substitution tags.
+Additional C<perltidy> arguments to use for C<< <% %> >> and C<< <& &> >> tags.
+For example, to ensure that these tags are never broken out onto multiple lines
+regardless of how long they are:
+
+    --perltidy-tag-argv="-fnl"  # short for --freeze-newlines
 
 =item -h, --help       
 

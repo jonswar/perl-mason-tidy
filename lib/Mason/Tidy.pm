@@ -66,7 +66,7 @@ method get_options ($class: $argv, $params_ref) {
         'perltidy-argv=s'       => \$params{perltidy_argv},
         'perltidy-block-argv=s' => \$params{perltidy_block_argv},
         'perltidy-line-argv=s'  => \$params{perltidy_line_argv},
-        'perltidy-subst-argv=s' => \$params{perltidy_subst_argv},
+        'perltidy-tag-argv=s'   => \$params{perltidy_tag_argv},
     );
     %$params_ref =
       map { ( $_, $params{$_} ) } grep { defined( $params{$_} ) } keys(%params);
