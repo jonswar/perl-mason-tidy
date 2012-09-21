@@ -8,6 +8,7 @@ Revision history for Mason-Tidy
 - Indent <%perl> blocks initially by 2 spaces, others by 0 by default
 - Use default perltidy settings (4 space indentation) for %-lines
 - Handle non-<%perl> blocks even when tags are not on their own lines
+- Fix --perltidy-tag-argv
 
 2.52  Sep 15, 2012
 
