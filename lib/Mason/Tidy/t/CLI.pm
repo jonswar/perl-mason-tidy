@@ -26,9 +26,6 @@ sub test_get_options : Tests {
 sub test_cli : Tests {
     my $out;
 
-    $out = capture_merged { system( $^X, "bin/masontidy", "-h" ) };
-    like( $out, qr/masontidy - Tidy/ );
-
     my $tempdir = tempdir( 'name-XXXX', TMPDIR => 1, CLEANUP => 1 );
     write_file( "$tempdir/comp1.mc", "<%2+2%>" );
     write_file( "$tempdir/comp2.mc", "<%4+4%>" );
@@ -49,6 +46,14 @@ sub test_cli : Tests {
         system( $^X, "bin/masontidy", $noprofile, "$tempdir/comp1.mc", "$tempdir/comp2.mc" );
     };
     like( $out, qr/must pass -r/ );
+}
+
+sub test_usage : Tests {
+    my $out;
+
+    return "author only" unless ( $ENV{AUTHOR_TESTING} );
+    $out = capture_merged { system( $^X, "bin/masontidy", "-h" ) };
+    like( $out, qr/masontidy - Tidy/ );
 }
 
 1;
