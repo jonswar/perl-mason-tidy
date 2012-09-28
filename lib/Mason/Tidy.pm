@@ -180,7 +180,7 @@ method tidy_method ($source) {
             }
         }
     }
-    my $final = join( "\n", @final_lines );
+    my $final = join( "\n", @final_lines ) . "\n";
 
     # Tidy content in blocks other than <%perl>
     #
