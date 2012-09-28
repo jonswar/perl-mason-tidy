@@ -82,7 +82,8 @@ method tidy_method ($source) {
     my @elements    = ();
     my $add_element = sub { push( @elements, [@_] ) };
 
-    my $last_line = scalar(@lines) - 1;
+    my $last_line        = scalar(@lines) - 1;
+    my $open_block_regex = $self->_open_block_regex;
 
     for ( my $cur_line = 0 ; $cur_line <= $last_line ; $cur_line++ ) {
         my $line = $lines[$cur_line];
@@ -124,7 +125,25 @@ method tidy_method ($source) {
             }
         }
 
-        # Everything else goes untouched
+        # Other blocks untouched
+        #
+        if ( my ($block_type) = ( $line =~ /$open_block_regex/ ) ) {
+            my $end_line;
+            foreach my $this_line ( $cur_line + 1 .. $last_line ) {
+                if ( $lines[$this_line] =~ m{</%$block_type>} ) {
+                    $end_line = $this_line;
+                    last;
+                }
+            }
+            if ($end_line) {
+                my $block_contents = join( "\n", @lines[ $cur_line .. $end_line ] );
+                $add_element->( 'block', $block_contents );
+                $cur_line = $end_line;
+                next;
+            }
+        }
+
+        # Single line of text untouched
         #
         $add_element->( 'text', $line );
     }
@@ -166,7 +185,6 @@ method tidy_method ($source) {
     # Tidy content in blocks other than <%perl>
     #
     my %replacements;
-    my $open_block_regex = $self->_open_block_regex;
     undef pos($final);
     while ( $final =~ /$open_block_regex[\t ]*\n?/mg ) {
         my ( $block_type, $block_args ) = ( $1, $2 );

@@ -89,6 +89,32 @@ content
     );
 }
 
+sub test_args : Tests {
+    tidy(
+        desc   => 'perl lines',
+        source => '
+<%args>
+$a
+@b
+%c
+$d => "foo"
+@e => (1,2,3)
+%f => (a=>5, b=>6)
+</%args>
+',
+        expect => '
+<%args>
+$a
+@b
+%c
+$d => "foo"
+@e => (1,2,3)
+%f => (a=>5, b=>6)
+</%args>
+'
+    );
+}
+
 sub test_perl_lines_and_perl_blocks : Tests {
     tidy(
         desc   => 'perl lines',
