@@ -6,8 +6,9 @@ sub tidy {
     my %params  = @_;
     my $source  = $params{source} or die "source required";
     my $expect  = $params{expect};
-    my $desc    = $params{desc} or die "desc required";
     my $options = $params{options} || {};
+    my $desc    = $params{desc};
+    ($desc) = ( ( caller(1) )[3] =~ /([^:]+$)/ ) if !$desc;
 
     $source =~ s/\\n/\n/g;
     if ( defined($expect) ) {
@@ -208,6 +209,16 @@ sub test_blocks_and_newlines : Tests {
         expect => "<%perl>\n  my \$foo = 5;\n</%perl>"
     );
     tidy(
+        desc   => 'double embedded newlines in <%perl>',
+        source => '<%perl>\n\nmy $foo = 3;\n\nmy $bar = 4;\n\n</%perl>',
+        expect => '<%perl>\n\n  my $foo = 3;\n\n  my $bar = 4;\n\n</%perl>',
+    );
+    tidy(
+        desc   => 'triple embedded newlines in <%perl>',
+        source => '<%perl>\n\n\nmy $foo = 3;\n\n\nmy $bar = 4;\n\n\n</%perl>',
+        expect => '<%perl>\n\n\n  my $foo = 3;\n\n\n  my $bar = 4;\n\n\n</%perl>',
+    );
+    tidy(
         desc   => 'no newlines',
         source => "<%init>my \$foo=5;</%init>",
         expect => "<%init>my \$foo = 5;</%init>"
@@ -226,6 +237,11 @@ sub test_blocks_and_newlines : Tests {
         desc   => 'newlines after <%init> and before </%init>',
         source => "<%init>\nmy \$foo=5;\n</%init>",
         expect => "<%init>\nmy \$foo = 5;\n</%init>"
+    );
+    tidy(
+        desc   => 'double embedded newlines in <%init>',
+        source => '<%init>\n\nmy $foo = 3;\n\nmy $bar = 4;\n\n</%init>',
+        expect => '<%init>\nmy $foo = 3;\nmy $bar = 4;\n</%init>',
     );
 }
 
@@ -413,9 +429,11 @@ if ($foo) {
 sub test_indent_block : Tests {
     my $source = '
 <%init>
+
     if ($foo) {
 $bar = 6;
   }
+
 </%init>
 ';
     tidy(
@@ -429,7 +447,6 @@ if ($foo) {
 </%init>
 '
     );
-    return;
     tidy(
         desc    => 'indent_block 2',
         options => { indent_block => 2 },

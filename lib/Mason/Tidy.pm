@@ -175,8 +175,13 @@ method tidy_method ($source) {
             $line =~ s/\}\s*\#\s*__end filter/\}\}/;
 
             if ( my ($real_line) = ( $line =~ /(.*?)\s*\#\s*__perl_block/ ) ) {
-                my $spacer = scalar( ' ' x $self->indent_perl_block );
-                push( @final_lines, $spacer . rtrim($real_line) );
+                if ( $real_line =~ /\S/ ) {
+                    my $spacer = scalar( ' ' x $self->indent_perl_block );
+                    push( @final_lines, $spacer . rtrim($real_line) );
+                }
+                else {
+                    push( @final_lines, '' );
+                }
             }
             else {
                 push( @final_lines, "% " . $line );

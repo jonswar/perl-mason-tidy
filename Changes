@@ -7,6 +7,7 @@ Revision history for Mason-Tidy
 - Don't tidy lines starting with % in <%args> and other special sections (Nic Wolff)
 - Don't lose final newline (Giovanni Pensa)
 - Add --pipe option (Mark Grimes)
+- Don't initially indent blank lines in a code block (Mark Grimes)
 
 2.53  Sep 20, 2012
 
