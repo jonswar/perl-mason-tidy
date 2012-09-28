@@ -16,19 +16,26 @@ sub usage {
 my %params;
 Mason::Tidy->get_options( \@ARGV, \%params ) or usage();
 Pod::Usage::pod2usage( { '-verbose' => 2 } ) if delete( $params{help} );
-usage() if !@ARGV;
 my $replace = delete( $params{replace} );
+my $pipe    = delete( $params{pipe} );
+usage() if !@ARGV == !$pipe;
 die "must pass -r/--replace with multiple filenames" if @ARGV > 1 && !$replace;
 
 my $mt = Mason::Tidy->new(%params);
-foreach my $file (@ARGV) {
-    my $source = read_file($file);
-    my $dest   = $mt->tidy($source);
-    if ($replace) {
-        write_file( $file, $dest );
-    }
-    else {
-        print $dest;
+if ($pipe) {
+    my $source = do { local $/; <STDIN> };
+    print $mt->tidy($source);
+}
+else {
+    foreach my $file (@ARGV) {
+        my $source = read_file($file);
+        my $dest   = $mt->tidy($source);
+        if ($replace) {
+            write_file( $file, $dest );
+        }
+        else {
+            print $dest;
+        }
     }
 }
 
@@ -46,9 +53,13 @@ masontidy - Tidy HTML::Mason / Mason components
 
     % masontidy file.mc
 
-    Process component(s) in place:
+    Tidy component(s) in place:
 
     % masontidy -r file1.mc [file2.mc ...]
+
+    Tidy standard input, write to standard output:
+
+    % masontidy -p|--pipe < file.mc
 
 =head1 DESCRIPTION
 
@@ -122,7 +133,7 @@ B<Perl expressions> inside C<< <% %> >> and C<< <& &> >> tags.
 
 =head1 INVOKING
 
-There are two ways to invoke C<masontidy>:
+There are three ways of invoking C<masontidy>:
 
 =over
 
@@ -135,11 +146,16 @@ Specify a single file; the result will be written to standard output.
 Specify one or more files with the -r/--replace flag; each file will be tidied
 in place.
 
+=item *
+
+Specify -p/--pipe; content from standard input will be tidied and written to
+standard output.
+
 =back
 
 For more advanced options, consider using C<masontidy> with L<tidyall|tidyall>;
-it will let you read from standard input, write to files with a separate
-extension, backup files before overwriting, etc.
+it will let you write to files with a separate extension, backup files before
+overwriting, etc.
 
 =head1 COMMAND-LINE OPTIONS
 

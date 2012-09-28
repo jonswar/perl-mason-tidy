@@ -4,6 +4,7 @@ use File::Slurp;
 use File::Temp qw(tempdir);
 use Mason::Tidy;
 use IPC::System::Simple qw(capturex);
+use IPC::Run3 qw(run3);
 use Test::Class::Most parent => 'Test::Class';
 
 my $noprofile = "--perltidy-argv='--noprofile'";
@@ -32,20 +33,26 @@ sub test_cli : Tests {
     $out = capture_merged {
         system( $^X, "bin/masontidy", $noprofile, "-r", "$tempdir/comp1.mc", "$tempdir/comp2.mc" );
     };
-    is( read_file("$tempdir/comp1.mc"), "<% 2 + 2 %>", "comp1" );
-    is( read_file("$tempdir/comp2.mc"), "<% 4 + 4 %>", "comp2" );
+    is( read_file("$tempdir/comp1.mc"), "<% 2 + 2 %>\n", "comp1" );
+    is( read_file("$tempdir/comp2.mc"), "<% 4 + 4 %>\n", "comp2" );
 
     write_file( "$tempdir/comp1.mc", "<%2+2%>" );
     $out = capture_merged {
         system( $^X, "bin/masontidy", $noprofile, "$tempdir/comp1.mc" );
     };
-    is( $out, "<% 2 + 2 %>" );
+    is( $out, "<% 2 + 2 %>\n" );
     is( read_file("$tempdir/comp1.mc"), "<%2+2%>", "comp1" );
 
     $out = capture_merged {
         system( $^X, "bin/masontidy", $noprofile, "$tempdir/comp1.mc", "$tempdir/comp2.mc" );
     };
     like( $out, qr/must pass -r/ );
+
+    my $in = "<%2+2%>\n<%4+4%>\n";
+    my $err;
+    run3( [ $^X, "bin/masontidy", "-p" ], \$in, \$out, \$err );
+    is( $err, "", "pipe - no error" );
+    is( $out, "<% 2 + 2 %>\n<% 4 + 4 %>\n", "pipe - output" );
 }
 
 sub test_usage : Tests {

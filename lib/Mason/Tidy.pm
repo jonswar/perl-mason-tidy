@@ -60,6 +60,7 @@ method get_options ($class: $argv, $params_ref) {
     my $result = GetOptionsFromArray(
         $argv,
         'h|help'                => \$params{help},
+        'p|pipe'                => \$params{pipe},
         'r|replace'             => \$params{replace},
         'indent-block=i'        => \$params{indent_block},
         'indent-perl-block=i'   => \$params{indent_perl_block},
@@ -74,7 +75,9 @@ method get_options ($class: $argv, $params_ref) {
 }
 
 method tidy ($source) {
-    return $self->tidy_method($source);
+    my $final = $self->tidy_method($source);
+    $final .= "\n" if substr( $final, -1, 1 ) ne "\n";
+    return $final;
 }
 
 method tidy_method ($source) {
@@ -180,7 +183,7 @@ method tidy_method ($source) {
             }
         }
     }
-    my $final = join( "\n", @final_lines ) . "\n";
+    my $final = join( "\n", @final_lines );
 
     # Tidy content in blocks other than <%perl>
     #

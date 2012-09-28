@@ -10,7 +10,10 @@ sub tidy {
     my $options = $params{options} || {};
 
     $source =~ s/\\n/\n/g;
-    $expect =~ s/\\n/\n/g if defined($expect);
+    if ( defined($expect) ) {
+        $expect =~ s/\\n/\n/g;
+        $expect .= "\n" if $expect !~ /\n$/;    # since masontidy enforces final newline
+    }
 
     my $mt = Mason::Tidy->new( %$options, perltidy_argv => '--noprofile' );
     my $dest = eval { $mt->tidy($source) };
