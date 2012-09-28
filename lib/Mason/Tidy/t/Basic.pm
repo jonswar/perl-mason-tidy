@@ -5,8 +5,12 @@ use Test::Class::Most parent => 'Test::Class';
 sub tidy {
     my %params  = @_;
     my $source  = $params{source} or die "source required";
+    my $expect  = $params{expect};
     my $desc    = $params{desc} or die "desc required";
     my $options = $params{options} || {};
+
+    $source =~ s/\\n/\n/g;
+    $expect =~ s/\\n/\n/g if defined($expect);
 
     my $mt = Mason::Tidy->new( %$options, perltidy_argv => '--noprofile' );
     my $dest = eval { $mt->tidy($source) };
@@ -16,8 +20,8 @@ sub tidy {
         is( $dest, undef, "no dest returned - $desc" );
     }
     else {
-        is( $err, '', "no error - $desc" );
-        is( trim($dest), trim( $params{expect} ), "expected content - $desc" );
+        is( $err,  '',      "no error - $desc" );
+        is( $dest, $expect, "expected content - $desc" );
     }
 }
 
@@ -115,6 +119,34 @@ $d => "foo"
     );
 }
 
+sub test_final_newline : Tests {
+    tidy(
+        desc   => 'one perl line with final newline',
+        source => '% my $foo = 5;\n',
+        expect => '% my $foo = 5;\n',
+    );
+    tidy(
+        desc   => 'one perl line without final newline',
+        source => '% my $foo = 5;',
+        expect => '% my $foo = 5;\n',
+    );
+    tidy(
+        desc   => 'two perl lines with final newline',
+        source => '% my $foo = 5;\n% my $bar = 6;\n',
+        expect => '% my $foo = 5;\n% my $bar = 6;\n',
+    );
+    tidy(
+        desc   => 'two perl lines without final newline',
+        source => '% my $foo = 5;\n% my $bar = 6;',
+        expect => '% my $foo = 5;\n% my $bar = 6;\n',
+    );
+    tidy(
+        desc   => 'two perl lines with two final newlines',
+        source => '% my $foo = 5;\n% my $bar = 6;\n\n',
+        expect => '% my $foo = 5;\n% my $bar = 6;\n',
+    );
+}
+
 sub test_perl_lines_and_perl_blocks : Tests {
     tidy(
         desc   => 'perl lines',
@@ -148,14 +180,6 @@ my $s = 9;
 %     }
 % }
 '
-    );
-}
-
-sub test_foo : Tests {
-    tidy(
-        desc   => 'no newlines',
-        source => "<%init>my \$foo=5;</%init>",
-        expect => "<%init>my \$foo = 5;</%init>"
     );
 }
 
