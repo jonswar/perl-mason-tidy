@@ -1,43 +1,9 @@
 #!/usr/bin/perl
-use Getopt::Long;
-use File::Slurp;
-use Mason::Tidy;
-use Pod::Usage;
+use Mason::Tidy::App;
 use strict;
 use warnings;
 
-sub usage {
-    my $msg = shift;
-    print STDERR "$msg\n" if $msg;
-    require Pod::Usage;
-    Pod::Usage::pod2usage( { verbose => 1, output => \*STDERR } );
-}
-
-my %params;
-Mason::Tidy->get_options( \@ARGV, \%params ) or usage();
-Pod::Usage::pod2usage( { '-verbose' => 2 } ) if delete( $params{help} );
-my $replace = delete( $params{replace} );
-my $pipe    = delete( $params{pipe} );
-usage() if !@ARGV == !$pipe;
-die "must pass -r/--replace with multiple filenames" if @ARGV > 1 && !$replace;
-
-my $mt = Mason::Tidy->new(%params);
-if ($pipe) {
-    my $source = do { local $/; <STDIN> };
-    print $mt->tidy($source);
-}
-else {
-    foreach my $file (@ARGV) {
-        my $source = read_file($file);
-        my $dest   = $mt->tidy($source);
-        if ($replace) {
-            write_file( $file, $dest );
-        }
-        else {
-            print $dest;
-        }
-    }
-}
+Mason::Tidy::App->run();
 
 1;
 
@@ -51,15 +17,15 @@ masontidy - Tidy HTML::Mason / Mason components
 
     Tidy component, write to standard output:
 
-    % masontidy file.mc
+    % masontidy -m [1|2] file.mc
 
     Tidy component(s) in place:
 
-    % masontidy -r file1.mc [file2.mc ...]
+    % masontidy -m [1|2] -r file1.mc [file2.mc ...]
 
     Tidy standard input, write to standard output:
 
-    % masontidy -p|--pipe < file.mc
+    % masontidy -m [1|2] -p|--pipe < file.mc
 
 =head1 DESCRIPTION
 
@@ -159,7 +125,17 @@ overwriting, etc.
 
 =head1 COMMAND-LINE OPTIONS
 
+You can specify default options in the C<MASONTIDY_OPT> environment variable,
+e.g.
+
+    MASONTIDY_OPT="-m 2"
+
 =over
+
+=item -m, --mason-version
+
+Mason major version - 1 or 2. Required. Put this in C<MASONTIDY_OPT> if you
+only ever use one version on your system.
 
 =item -r, --replace
 

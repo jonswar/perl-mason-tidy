@@ -4,6 +4,10 @@ Revision history for Mason-Tidy
 
 2.54  Sep 20, 2012
 
+- Add required option -m/--mason-version, as a few syntactic elements like "% }}" must be
+  treated differently between versions (Shane McCarron)
+- Support environment variable MASONTIDY_OPT
+- Move implementation of bin/masontidy to Mason::Tidy::App
 - Don't tidy lines starting with % in <%args> and other special sections (Nic Wolff)
 - Don't lose final newline (Giovanni Pensa)
 - Add --pipe option (Mark Grimes)

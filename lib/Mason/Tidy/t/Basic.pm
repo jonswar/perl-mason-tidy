@@ -6,7 +6,7 @@ sub tidy {
     my %params  = @_;
     my $source  = $params{source} or die "source required";
     my $expect  = $params{expect};
-    my $options = $params{options} || {};
+    my $options = { mason_version => 2, %{ $params{options} || {} } };
     my $desc    = $params{desc};
     ($desc) = ( ( caller(1) )[3] =~ /([^:]+$)/ ) if !$desc;
 
@@ -471,6 +471,23 @@ sub test_errors : Tests {
         desc         => 'no matching close block',
         source       => "<%init>\nmy \$foo = bar;</%ini>",
         expect_error => qr/no matching end tag/,
+    );
+}
+
+sub test_random_bugs : Tests {
+    tidy(
+        desc    => 'final double brace (mason 1)',
+        options => { mason_version => 1 },
+        source  => '
+% if ($foo) {
+% if ($bar) {
+% }}
+',
+        expect => '
+% if ($foo) {
+%     if ($bar) {
+% }}
+'
     );
 }
 
