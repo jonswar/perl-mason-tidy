@@ -32,6 +32,7 @@ method run () {
         push( @argv, split( /\s+/, $envvar ) );
     }
     usage() if !@argv;
+    my $source = $_[0];
 
     my ( %params, $help, $pipe, $replace );
     GetOptionsFromArray(
@@ -52,12 +53,12 @@ method run () {
     usage() if $help;
     usage("-m|mason-version required") unless defined( $params{mason_version} );
     usage("-m|mason-version must be 1 or 2") unless $params{mason_version} =~ /^[12]$/;
-    usage("-p|--pipe not compatible with filenames")        if $pipe     && @argv;
-    usage("must pass either filenames or -p|--pipe")        if !$pipe    && !@argv;
+    usage("-p|--pipe not compatible with filenames") if $pipe && @argv;
+    usage("must pass either filenames or -p|--pipe") if !$pipe && !@argv && !defined($source);
     usage("must pass -r/--replace with multiple filenames") if @argv > 1 && !$replace;
 
     my $mt = Mason::Tidy->new(%params);
-    if ( defined( my $source = shift(@_) ) ) {
+    if ( defined($source) ) {
         return $mt->tidy($source);
     }
     elsif ($pipe) {

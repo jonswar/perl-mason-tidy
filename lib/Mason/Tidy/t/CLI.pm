@@ -8,6 +8,8 @@ use IPC::System::Simple qw(capturex);
 use IPC::Run3 qw(run3);
 use Test::Class::Most parent => 'Test::Class';
 
+local $ENV{MASONTIDY_OPT};
+
 my @std_argv = ( "--perltidy-argv='--noprofile'", "-m=2" );
 
 sub test_cli : Tests {
@@ -19,49 +21,34 @@ sub test_cli : Tests {
     write_file( "$tempdir/comp3.mc", "%if (foo){\n%bar\n%}\n" );
 
     my $cli = sub {
-        my @argv = @_;
+        local @ARGV = @_;
         ( $out, $err ) = capture {
-            system( $^X, "bin/masontidy", @std_argv, @argv );
+            Mason::Tidy::App->run();
         };
+        is( $err, "", "err empty" );
     };
 
-    $cli->( "-r", "$tempdir/comp1.mc", "$tempdir/comp2.mc" );
+    $cli->( "-r", "$tempdir/comp1.mc", "$tempdir/comp2.mc", @std_argv );
     is( $out,                           "",              "out empty" );
-    is( $err,                           "",              "err empty" );
     is( read_file("$tempdir/comp1.mc"), "<% 2 + 2 %>\n", "comp1" );
     is( read_file("$tempdir/comp2.mc"), "<% 4 + 4 %>\n", "comp2" );
 
     write_file( "$tempdir/comp1.mc", "<%2+2%>" );
-    $cli->("$tempdir/comp1.mc");
+    $cli->( "$tempdir/comp1.mc", @std_argv );
     is( $out,                           "<% 2 + 2 %>\n", "single file - out" );
-    is( $err,                           "",              "single file - error" );
     is( read_file("$tempdir/comp1.mc"), "<%2+2%>",       "comp1" );
 
-    $cli->("$tempdir/comp3.mc");
+    $cli->( "$tempdir/comp3.mc", @std_argv );
     is( $out, "% if (foo) {\n%     bar\n% }\n", "no options" );
-    is( $err, "", "err empty" );
-    $cli->( '--perltidy-line-argv="-i=2"', "$tempdir/comp3.mc" );
+    $cli->( '--perltidy-line-argv="-i=2"', "$tempdir/comp3.mc", @std_argv );
     is( $out, "% if (foo) {\n%   bar\n% }\n", "no options" );
-    is( $err, "", "err empty" );
 
-    ( $out, $err ) = capture {
-        system( $^X, "bin/masontidy", "$tempdir/comp1.mc" );
-    };
-    like( $err, qr/mason-version required/ );
-
-    ( $out, $err ) = capture {
-        system( $^X, "bin/masontidy", "-m", "3", "$tempdir/comp1.mc" );
-    };
-    like( $err, qr/must be 1 or 2/ );
-
-    $cli->( "-p", "$tempdir/comp1.mc" );
-    like( $err, qr/pipe not compatible/ );
-
-    $cli->();
-    like( $err, qr/must pass either/ );
-
-    $cli->( "$tempdir/comp1.mc", "$tempdir/comp2.mc" );
-    like( $err, qr/must pass .* with multiple filenames/ );
+    throws_ok { $cli->("$tempdir/comp1.mc") } qr/mason-version required/;
+    throws_ok { $cli->( "-m", "3", "$tempdir/comp1.mc" ) } qr/must be 1 or 2/;
+    throws_ok { $cli->( "-p", "$tempdir/comp1.mc", @std_argv ) } qr/pipe not compatible/;
+    throws_ok { $cli->(@std_argv) } qr/must pass either/;
+    throws_ok { $cli->( "$tempdir/comp1.mc", "$tempdir/comp2.mc", @std_argv ) }
+    qr/must pass .* with multiple filenames/;
 
     local $ENV{MASONTIDY_OPT} = "-p";
     my $in = "<%2+2%>\n<%4+4%>\n";
