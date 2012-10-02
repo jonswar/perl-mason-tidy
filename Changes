@@ -4,6 +4,8 @@ Revision history for Mason-Tidy
 
 2.57  Oct 1, 2012
 
+- Add -v/--version
+
 2.56  Oct 1, 2012
 
 - Blank %-lines: Don't add an extra space, and don't remove (Pedro Melo)

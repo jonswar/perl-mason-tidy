@@ -12,8 +12,9 @@ See https://metacpan.org/module/masontidy for full documentation.
 Options:
    -h, --help                     Print help message
    -m <1|2>                       Mason major version - required
-   -p, pipe                       Pipe from stdin to stdout
-   -r, replace                    Replace file(s) in-place
+   -p, --pipe                     Pipe from stdin to stdout
+   -r, --replace                  Replace file(s) in-place
+   -v, --version                  Print version
    -indent-block <num>            Number of spaces to initially indent code block lines
    -indent-perl-block <num>       Number of spaces to initially indent <%perl> block lines
    -perltidy-argv=<argv>          perltidy arguments to use everywhere
@@ -25,6 +26,11 @@ Options:
 func usage ($msg) {
     my $full_msg = ( $msg ? "$msg\n" : "" ) . $usage;
     die $full_msg;
+}
+
+func version () {
+    my $version = $Mason::Tidy::VERSION || 'unknown';
+    print "masontidy $version on perl $] built for $Config{archname}\n";
 }
 
 method run () {
@@ -42,6 +48,7 @@ method run () {
         'm|mason-version=i'     => \$params{mason_version},
         'p|pipe'                => \$pipe,
         'r|replace'             => \$replace,
+        'v|version'             => \$version,
         'indent-block=i'        => \$params{indent_block},
         'indent-perl-block=i'   => \$params{indent_perl_block},
         'perltidy-argv=s'       => \$params{perltidy_argv},
@@ -51,8 +58,9 @@ method run () {
     ) or usage();
     %params = map { ( $_, $params{$_} ) } grep { defined( $params{$_} ) } keys(%params);
 
-    usage() if $help;
-    usage("-m|mason-version required") unless defined( $params{mason_version} );
+    version() if $version;
+    usage()   if $help;
+    usage("-m|mason-version required (1 or 2)") unless defined( $params{mason_version} );
     usage("-m|mason-version must be 1 or 2") unless $params{mason_version} =~ /^[12]$/;
     usage("-p|--pipe not compatible with filenames") if $pipe && @argv;
     usage("must pass either filenames or -p|--pipe") if !$pipe && !@argv && !defined($source);

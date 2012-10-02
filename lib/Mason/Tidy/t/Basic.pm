@@ -378,10 +378,12 @@ sub test_blank_lines : Tests {
     tidy( source => '\n% foo();\n' );
     tidy( source => '% foo()\n%' );
     tidy( source => '\n% foo()\n%\n' );
+    tidy( source => '  Hello\n\n\n  Goodbye\n' );
     tidy(
-        desc   => '2 blank %-lines before and after',
-        source => '\n%\n%\n% my $foo = 5;\n%\n% my $bar = 6;\n%\n%\n',
+        source => '<%perl>\nmy $foo = 5;\n\nmy $bar = 6;\n\n</%perl>',
+        expect => '<%perl>\n  my $foo = 5;\n\n  my $bar = 6;\n\n</%perl>'
     );
+    tidy( source => '\n%\n%\n% my $foo = 5;\n%\n% my $bar = 6;\n%\n%\n', );
 }
 
 sub test_single_line_block : Tests {
