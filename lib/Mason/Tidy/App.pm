@@ -42,7 +42,7 @@ method run () {
     my $source = $_[0];
     usage() if !@argv && !$source;
 
-    my ( %params, $help, $pipe, $replace );
+    my ( %params, $help, $pipe, $replace, $version );
     GetOptionsFromArray(
         \@argv,
         'h|help'                => \$help,
