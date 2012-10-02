@@ -1,7 +1,7 @@
 package Mason::Tidy::App;
 use Config;
 use File::Slurp;
-use Getopt::Long qw(GetOptionsFromArray);
+use Getopt::Long;
 use Mason::Tidy;
 use Method::Signatures::Simple;
 use strict;
@@ -44,20 +44,23 @@ method run () {
     usage() if !@argv && !$source;
 
     my ( %params, $help, $pipe, $replace, $version );
-    GetOptionsFromArray(
-        \@argv,
-        'h|help'                => \$help,
-        'm|mason-version=i'     => \$params{mason_version},
-        'p|pipe'                => \$pipe,
-        'r|replace'             => \$replace,
-        'indent-block=i'        => \$params{indent_block},
-        'indent-perl-block=i'   => \$params{indent_perl_block},
-        'perltidy-argv=s'       => \$params{perltidy_argv},
-        'perltidy-block-argv=s' => \$params{perltidy_block_argv},
-        'perltidy-line-argv=s'  => \$params{perltidy_line_argv},
-        'perltidy-tag-argv=s'   => \$params{perltidy_tag_argv},
-        'version'               => \$version,
-    ) or usage();
+    {
+        local @ARGV = @argv;
+        GetOptions(
+            'h|help'                => \$help,
+            'm|mason-version=i'     => \$params{mason_version},
+            'p|pipe'                => \$pipe,
+            'r|replace'             => \$replace,
+            'indent-block=i'        => \$params{indent_block},
+            'indent-perl-block=i'   => \$params{indent_perl_block},
+            'perltidy-argv=s'       => \$params{perltidy_argv},
+            'perltidy-block-argv=s' => \$params{perltidy_block_argv},
+            'perltidy-line-argv=s'  => \$params{perltidy_line_argv},
+            'perltidy-tag-argv=s'   => \$params{perltidy_tag_argv},
+            'version'               => \$version,
+        ) or usage();
+        @argv = @ARGV;
+    }
     %params = map { ( $_, $params{$_} ) } grep { defined( $params{$_} ) } keys(%params);
 
     version() if $version;

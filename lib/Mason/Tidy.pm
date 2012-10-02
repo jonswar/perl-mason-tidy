@@ -1,6 +1,5 @@
 package Mason::Tidy;
 use File::Slurp;
-use Getopt::Long qw(GetOptionsFromArray);
 use Method::Signatures::Simple;
 use Moo;
 use Perl::Tidy qw();
@@ -398,12 +397,6 @@ C<indent_perl_block> here).
 
 Tidy component source I<$source> and return the tidied result. Throw fatal
 error if source cannot be tidied (e.g. invalid syntax).
-
-=item get_options ($argv, $params)
-
-Use C<Getopt::Long::GetOptions> to parse the options in I<$argv> and place
-params in I<$params> appropriate for passing into the constructor. Returns the
-return value of C<GetOptions>.
 
 =back
 
