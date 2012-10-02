@@ -227,9 +227,9 @@ method tidy_method ($source) {
     my $subst_tag_regex = $self->_subst_tag_regex;
     $final =~ s/$subst_tag_regex/"<% " . $self->tidy_subst_expr($1) . " %>"/ge;
 
-    # Tidy Perl in <& &> tags
+    # Tidy Perl in <& &> and <&| &> tags
     #
-    $final =~ s/<&(.*?)&>/"<& " . $self->tidy_compcall_expr($1) . " &>"/ge;
+    $final =~ s/(<&\|?)(.*?)&>/"$1 " . $self->tidy_compcall_expr($2) . " &>"/ge;
 
     return $final;
 }

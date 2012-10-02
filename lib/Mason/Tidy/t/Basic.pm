@@ -253,6 +253,11 @@ sub test_tags : Tests {
         source => '<&/foo/bar,a=>5,b=>6&> text <&  $comp_path, str=>"foo"&>',
         expect => '<& /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
     );
+    tidy(
+        desc   => 'comp call w/content tag',
+        source => '<&|/foo/bar,a=>5,b=>6&> text <&  $comp_path, str=>"foo"&>',
+        expect => '<&| /foo/bar, a => 5, b => 6 &> text <& $comp_path, str => "foo" &>',
+    );
 }
 
 sub test_filter_invoke : Tests {

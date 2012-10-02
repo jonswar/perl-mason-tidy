@@ -6,6 +6,7 @@ Revision history for Mason-Tidy
 
 - Blank %-lines: Don't add an extra space, and don't remove (Pedro Melo)
 - Fix handling of empty or nearly empty components and methods
+- Handle <&| &> tags
 
 2.55  Sep 30, 2012
 
