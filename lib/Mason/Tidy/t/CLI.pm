@@ -68,6 +68,10 @@ sub test_usage : Tests {
     return "author only" unless ( $ENV{AUTHOR_TESTING} );
     $out = capture_merged { system( $^X, "bin/masontidy", "-h" ) };
     like( $out, qr/Usage: masontidy/ );
+
+    $out = capture_merged { system( $^X, "bin/masontidy", "--version" ) };
+    like( $out, qr/masontidy .* on perl/ );
+
 }
 
 1;

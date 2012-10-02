@@ -1,4 +1,5 @@
 package Mason::Tidy::App;
+use Config;
 use File::Slurp;
 use Getopt::Long qw(GetOptionsFromArray);
 use Mason::Tidy;
@@ -14,13 +15,13 @@ Options:
    -m <1|2>                       Mason major version - required
    -p, --pipe                     Pipe from stdin to stdout
    -r, --replace                  Replace file(s) in-place
-   -v, --version                  Print version
    -indent-block <num>            Number of spaces to initially indent code block lines
    -indent-perl-block <num>       Number of spaces to initially indent <%perl> block lines
    -perltidy-argv=<argv>          perltidy arguments to use everywhere
    -perltidy-block-argv=<argv>    perltidy arguments to use for code blocks
    -perltidy-line-argv=<argv>     perltidy arguments to use for %-lines
    -perltidy-tag-argv=<argv>      perltidy arguments to use for <% %> and <& &> tags
+   --version                      Print version
 ';
 
 func usage ($msg) {
@@ -49,13 +50,13 @@ method run () {
         'm|mason-version=i'     => \$params{mason_version},
         'p|pipe'                => \$pipe,
         'r|replace'             => \$replace,
-        'v|version'             => \$version,
         'indent-block=i'        => \$params{indent_block},
         'indent-perl-block=i'   => \$params{indent_perl_block},
         'perltidy-argv=s'       => \$params{perltidy_argv},
         'perltidy-block-argv=s' => \$params{perltidy_block_argv},
         'perltidy-line-argv=s'  => \$params{perltidy_line_argv},
         'perltidy-tag-argv=s'   => \$params{perltidy_tag_argv},
+        'version'               => \$version,
     ) or usage();
     %params = map { ( $_, $params{$_} ) } grep { defined( $params{$_} ) } keys(%params);
 
