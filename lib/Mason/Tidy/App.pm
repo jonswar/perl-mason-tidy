@@ -31,6 +31,7 @@ func usage ($msg) {
 func version () {
     my $version = $Mason::Tidy::VERSION || 'unknown';
     print "masontidy $version on perl $] built for $Config{archname}\n";
+    exit;
 }
 
 method run () {
