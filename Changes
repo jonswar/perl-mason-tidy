@@ -2,7 +2,7 @@ Revision history for Mason-Tidy
 
 ** denotes an incompatible change
 
-2.56  Sep 30, 2012
+2.56  Oct 1, 2012
 
 - Blank %-lines: Don't add an extra space, and don't remove (Pedro Melo)
 - Fix handling of empty or nearly empty components and methods
