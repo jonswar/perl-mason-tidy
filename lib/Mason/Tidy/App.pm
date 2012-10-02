@@ -31,8 +31,8 @@ method run () {
     if ( my $envvar = $ENV{MASONTIDY_OPT} ) {
         push( @argv, split( /\s+/, $envvar ) );
     }
-    usage() if !@argv;
     my $source = $_[0];
+    usage() if !@argv && !$source;
 
     my ( %params, $help, $pipe, $replace );
     GetOptionsFromArray(
