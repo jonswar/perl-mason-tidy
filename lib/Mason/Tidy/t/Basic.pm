@@ -5,10 +5,14 @@ use Test::Class::Most parent => 'Test::Class';
 sub tidy {
     my %params  = @_;
     my $source  = $params{source} or die "source required";
-    my $expect  = $params{expect};
+    my $expect  = $params{expect} || $source;
     my $options = { mason_version => 2, %{ $params{options} || {} } };
     my $desc    = $params{desc};
-    ($desc) = ( ( caller(1) )[3] =~ /([^:]+$)/ ) if !$desc;
+    if ( !defined($desc) ) {
+        my ($caller) = ( ( caller(1) )[3] =~ /([^:]+$)/ );
+        ( my $source_flat = $source ) =~ s/\n/\\n/g;
+        $desc = "$caller: $source_flat";
+    }
 
     $source =~ s/\\n/\n/g;
     if ( defined($expect) ) {
@@ -83,15 +87,38 @@ content
 </%method>
 '
     );
+}
 
+sub test_empty_method : Tests {
+    tidy( source => '<%method foo>\n</%method>' );
+    tidy( source => '<%method foo>\n%\n</%method>\n', );
+    tidy( source => '<%method foo>\n\n</%method>' );
+    tidy( source => '\n<%method foo>\n%\n%\n</%method>\n' );
+}
+
+sub test_multiple_methods : Tests {
     tidy(
-        desc   => 'empty method',
+        desc   => 'multiple method',
         source => '
 <%method foo>
+%foo();
+</%method>
+
+<%method bar>
+<%perl>
+bar();
+</%perl>
 </%method>
 ',
         expect => '
 <%method foo>
+% foo();
+</%method>
+
+<%method bar>
+<%perl>
+  bar();
+</%perl>
 </%method>
 '
     );
@@ -124,28 +151,14 @@ $d => "foo"
 }
 
 sub test_final_newline : Tests {
+    tidy( source => '% my $foo = 5;\n', );
+    tidy( source => '% my $foo = 5;', expect => '% my $foo = 5;\n', );
+    tidy( source => '% my $foo = 5;\n% my $bar = 6;\n', );
     tidy(
-        desc   => 'one perl line with final newline',
-        source => '% my $foo = 5;\n',
-        expect => '% my $foo = 5;\n',
-    );
-    tidy(
-        desc   => 'one perl line without final newline',
-        source => '% my $foo = 5;',
-        expect => '% my $foo = 5;\n',
-    );
-    tidy(
-        desc   => 'two perl lines with final newline',
-        source => '% my $foo = 5;\n% my $bar = 6;\n',
-        expect => '% my $foo = 5;\n% my $bar = 6;\n',
-    );
-    tidy(
-        desc   => 'two perl lines without final newline',
         source => '% my $foo = 5;\n% my $bar = 6;',
-        expect => '% my $foo = 5;\n% my $bar = 6;\n',
+        expect => '% my $foo = 5;\n% my $bar = 6;\n'
     );
     tidy(
-        desc   => 'two perl lines with two final newlines',
         source => '% my $foo = 5;\n% my $bar = 6;\n\n',
         expect => '% my $foo = 5;\n% my $bar = 6;\n',
     );
@@ -188,58 +201,38 @@ my $s = 9;
 }
 
 sub test_blocks_and_newlines : Tests {
+    tidy( source => "<%perl>my \$foo=5;</%perl>", );
+    tidy( source => "<%perl>my \$foo=5;\n  </%perl>", );
+    tidy( source => "<%perl>\nmy \$foo=5;</%perl>", );
     tidy(
-        desc   => 'no newlines',
-        source => "<%perl>my \$foo=5;</%perl>",
-        expect => "<%perl>my \$foo=5;</%perl>"
-    );
-    tidy(
-        desc   => 'newline before </%perl>',
-        source => "<%perl>my \$foo=5;\n  </%perl>",
-        expect => "<%perl>my \$foo=5;\n  </%perl>"
-    );
-    tidy(
-        desc   => 'newline after <%perl>',
-        source => "<%perl>\nmy \$foo=5;</%perl>",
-        expect => "<%perl>\nmy \$foo=5;</%perl>"
-    );
-    tidy(
-        desc   => 'newlines after <%perl> and before </%perl>',
         source => "<%perl>\nmy \$foo=5;\n</%perl>",
         expect => "<%perl>\n  my \$foo = 5;\n</%perl>"
     );
     tidy(
-        desc   => 'double embedded newlines in <%perl>',
         source => '<%perl>\n\nmy $foo = 3;\n\nmy $bar = 4;\n\n</%perl>',
         expect => '<%perl>\n\n  my $foo = 3;\n\n  my $bar = 4;\n\n</%perl>',
     );
     tidy(
-        desc   => 'triple embedded newlines in <%perl>',
         source => '<%perl>\n\n\nmy $foo = 3;\n\n\nmy $bar = 4;\n\n\n</%perl>',
         expect => '<%perl>\n\n\n  my $foo = 3;\n\n\n  my $bar = 4;\n\n\n</%perl>',
     );
     tidy(
-        desc   => 'no newlines',
         source => "<%init>my \$foo=5;</%init>",
         expect => "<%init>my \$foo = 5;</%init>"
     );
     tidy(
-        desc   => 'newline before </%init>',
         source => "<%init>my \$foo=5;\n  </%init>",
         expect => "<%init>my \$foo = 5;\n  </%init>"
     );
     tidy(
-        desc   => 'newline after <%init>',
         source => "<%init>\nmy \$foo=5;</%init>",
         expect => "<%init>\nmy \$foo = 5;</%init>"
     );
     tidy(
-        desc   => 'newlines after <%init> and before </%init>',
         source => "<%init>\nmy \$foo=5;\n</%init>",
         expect => "<%init>\nmy \$foo = 5;\n</%init>"
     );
     tidy(
-        desc   => 'double embedded newlines in <%init>',
         source => '<%init>\n\nmy $foo = 3;\n\nmy $bar = 4;\n\n</%init>',
         expect => '<%init>\nmy $foo = 3;\nmy $bar = 4;\n</%init>',
     );
@@ -368,15 +361,24 @@ sub test_perltidy_argv : Tests {
     );
 }
 
+sub test_blank_lines : Tests {
+    tidy( source => '%' );
+    tidy( source => '\n' );
+    tidy( source => '\n%\n' );
+    tidy( source => '% foo();' );
+    tidy( source => '\n% foo();\n' );
+    tidy( source => '% foo()\n%' );
+    tidy( source => '\n% foo()\n%\n' );
+    tidy(
+        desc   => '2 blank %-lines before and after',
+        source => '\n%\n%\n% my $foo = 5;\n%\n% my $bar = 6;\n%\n%\n',
+    );
+}
+
 sub test_single_line_block : Tests {
     tidy(
-        desc   => 'indent_perl_block 0',
-        source => '
-<%perl>my $foo = 5;</%perl>
-',
-        expect => '
-<%perl>my $foo = 5;</%perl>
-'
+        source => '<%perl>my $foo = 5;</%perl>',
+        expect => '<%perl>my $foo = 5;</%perl>'
     );
 }
 
