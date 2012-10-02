@@ -96,6 +96,10 @@ sub test_empty_method : Tests {
     tidy( source => '\n<%method foo>\n%\n%\n</%method>\n' );
 }
 
+sub test_backslashes : Tests {
+    tidy( source => 'Blah\\\n\n<%method foo>\\\nFoo\\\n% my $d = 5;\n</%method>\\\nBlurg\\\n' );
+}
+
 sub test_multiple_methods : Tests {
     tidy(
         desc   => 'multiple method',
