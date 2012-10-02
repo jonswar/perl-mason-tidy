@@ -7,6 +7,7 @@ use strict;
 use warnings;
 
 my $usage = 'Usage: masontidy [options] [file] ...
+See https://metacpan.org/module/masontidy for full documentation.
 
 Options:
    -h, --help                     Print help message
