@@ -72,20 +72,8 @@ if ($foo) {
 sub test_mixed_sections : Tests {
     tidy(
         desc   => 'method',
-        source => '
-<%method foo>
-%if (  $foo) {
-content
-%}
-</%method>
-',
-        expect => '
-<%method foo>
-% if ($foo) {
-content
-% }
-</%method>
-'
+        source => '<%method foo>\n%if (  $foo) {\ncontent\n%}\n</%method>\n',
+        expect => '<%method foo>\n% if ($foo) {\ncontent\n% }\n</%method>\n'
     );
 }
 
@@ -161,6 +149,10 @@ $d => "foo"
 }
 
 sub test_perl_lines_and_perl_blocks : Tests {
+    tidy(
+        desc   => 'perl lines with commented out tags',
+        source => '% # <%init>\n% # <% $foo %>\n% # <& "foo" &>\n'
+    );
     tidy(
         desc   => 'perl lines',
         source => '

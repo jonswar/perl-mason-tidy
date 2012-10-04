@@ -87,8 +87,8 @@ method tidy_method ($source) {
 
     # Hide <% %> and <& &>
     #
-    while ( $source =~ s/($open_block_regex.*?<\/%\2>)/$self->replace_with_marker($1)/se ) { }
-    while ( $source =~ s/(<(%|&\|?)(?!perl).*?\2>)/$self->replace_with_marker($1)/se )     { }
+    while ( $source =~ s/($open_block_regex.*?<\/%\2>)/$self->replace_with_marker($1)/se )   { }
+    while ( $source =~ s/(<(%|&\|?)(?![A-Za-z]+>).*?\2>)/$self->replace_with_marker($1)/se ) { }
 
     my @lines = split( /\n/, $source, -1 );
     pop(@lines) if @lines && $lines[-1] eq '';
@@ -196,9 +196,10 @@ method tidy_method ($source) {
     #
     my @replacements;
     undef pos($final);
-    while ( $final =~ /$open_block_regex[\t ]*\n?/mg ) {
-        my ( $block_type, $block_args ) = ( $1, $2 );
-        my $start_pos = pos($final);
+    while ( $final =~ /^(.*)$open_block_regex[\t ]*\n?/mg ) {
+        my ( $preceding, $block_type, $block_args ) = ( $1, $2, $3 );
+        next if length($preceding) > 0 && substr( $preceding, 0, 1 ) eq '%';
+        my $start_pos = pos($final) + length($preceding);
         if ( $final =~ /(\n?[\t ]*<\/%$block_type>)/g ) {
             my $length = pos($final) - $start_pos - length($1);
             my $untidied_block_contents = substr( $final, $start_pos, $length );
@@ -277,7 +278,7 @@ method handle_block ($block_type, $block_args, $block_contents) {
 }
 
 method replace_with_perl_comment ($obj) {
-    return "# " . $self->replace_with_marker($obj);
+    return "# _LINE_" . $self->replace_with_marker($obj);
 }
 
 method replace_with_marker ($obj) {
@@ -288,7 +289,7 @@ method replace_with_marker ($obj) {
 
 method marker_in_line ($line) {
     my $marker_prefix = $self->_marker_prefix;
-    if ( my ($marker) = ( $line =~ /(${marker_prefix}_\d+)/ ) ) {
+    if ( my ($marker) = ( $line =~ /_LINE_(${marker_prefix}_\d+)/ ) ) {
         return $marker;
     }
     return undef;
