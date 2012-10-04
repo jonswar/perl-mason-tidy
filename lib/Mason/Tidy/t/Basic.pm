@@ -90,7 +90,9 @@ content
 }
 
 sub test_empty_method : Tests {
-    tidy( source => '<%method foo>\n</%method>' );
+    tidy( source => 'foo\nbar\n' );
+    return;
+    tidy( source => '<%method foo>\n</%method>\n' );
     tidy( source => '<%method foo>\n%\n</%method>\n', );
     tidy( source => '<%method foo>\n\n</%method>' );
     tidy( source => '\n<%method foo>\n%\n%\n</%method>\n' );
@@ -168,7 +170,7 @@ sub test_final_newline : Tests {
     );
     tidy(
         source => '% my $foo = 5;\n% my $bar = 6;\n\n',
-        expect => '% my $foo = 5;\n% my $bar = 6;\n',
+        expect => '% my $foo = 5;\n% my $bar = 6;\n\n',
     );
 }
 
@@ -377,9 +379,10 @@ sub test_perltidy_argv : Tests {
 }
 
 sub test_blank_lines : Tests {
+    tidy( source => '\n%\n' );
     tidy( source => '%' );
     tidy( source => '\n' );
-    tidy( source => '\n%\n' );
+    tidy( source => '\n\n' );
     tidy( source => '% foo();' );
     tidy( source => '\n% foo();\n' );
     tidy( source => '% foo()\n%' );
@@ -390,6 +393,7 @@ sub test_blank_lines : Tests {
         expect => '<%perl>\n  my $foo = 5;\n\n  my $bar = 6;\n\n</%perl>'
     );
     tidy( source => '\n%\n%\n% my $foo = 5;\n%\n% my $bar = 6;\n%\n%\n', );
+    tidy( source => '<%init>\nmy $foo = 5;\n</%init>\n\n' );
 }
 
 sub test_single_line_block : Tests {

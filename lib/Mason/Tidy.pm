@@ -60,13 +60,14 @@ method mixed_block_names () {
 }
 
 method tidy ($source) {
+    $source .= "\n" if substr( $source, -1, 1 ) ne "\n";
     my $final = $self->tidy_method($source);
-    $final .= "\n" if substr( $final, -1, 1 ) ne "\n";
     return $final;
 }
 
 method tidy_method ($source) {
     return $source if $source !~ /\S/;
+    my $final_newline = ( $source =~ /\n$/ );
 
     my $open_block_regex = $self->_open_block_regex;
     my $marker_prefix    = $self->_marker_prefix;
@@ -148,17 +149,15 @@ method tidy_method ($source) {
     #
     my $untidied_perl = join( "\n",
         map { $_->[0] eq 'perl_line' ? trim( $_->[1] ) : $self->replace_with_perl_comment($_) }
-          @elements );
+          @elements )
+      . "\n";
     $self->perltidy(
         source      => \$untidied_perl,
         destination => \my $tidied_perl,
         argv        => $self->perltidy_line_argv . " -fnl -fbl",
     );
-    if ( substr( $untidied_perl, -1, 1 ) ne "\n" && substr( $tidied_perl, -1, 1 ) eq "\n" ) {
-        substr( $tidied_perl, -1, 1 ) = "";
-    }
 
-    my @tidied_lines = split( /\n/, $tidied_perl, -1 );
+    my @tidied_lines = split( /\n/, substr( $tidied_perl, 0, -1 ), -1 );
     @tidied_lines = ('') if !@tidied_lines;
     my @final_lines = ();
     foreach my $line (@tidied_lines) {
@@ -187,7 +186,7 @@ method tidy_method ($source) {
             }
         }
     }
-    my $final = join( "\n", @final_lines );
+    my $final = join( "\n", @final_lines ) . ( $final_newline ? "\n" : "" );
 
     # Restore <% %> and <& &> and blocks
     #
