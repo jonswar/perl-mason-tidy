@@ -68,15 +68,35 @@ method tidy ($source) {
 method tidy_method ($source) {
     return $source if $source !~ /\S/;
 
+    my $open_block_regex = $self->_open_block_regex;
+    my $marker_prefix    = $self->_marker_prefix;
+
+    # Hide blocks other than <%perl>
+    #
+    while ( $source =~ s/($open_block_regex.*?<\/%\2>)/$self->replace_with_marker($1)/se ) { }
+
+    # Tidy Perl in <% %>
+    #
+    my $subst_tag_regex = $self->_subst_tag_regex;
+    $source =~ s/$subst_tag_regex/"<% " . $self->tidy_subst_expr($1) . " %>"/ge;
+
+    # Tidy Perl in <& &> and <&| &>
+    #
+    $source =~ s/(<&\|?)(.*?)&>/"$1 " . $self->tidy_compcall_expr($2) . " &>"/ge;
+
+    # Hide <% %> and <& &>
+    #
+    while ( $source =~ s/($open_block_regex.*?<\/%\2>)/$self->replace_with_marker($1)/se ) { }
+    while ( $source =~ s/(<(%|&\|?)(?!perl).*?\2>)/$self->replace_with_marker($1)/se )     { }
+
     my @lines = split( /\n/, $source, -1 );
     pop(@lines) if @lines && $lines[-1] eq '';
     my @elements = ();
     my $add_element = sub { push( @elements, [@_] ) };
 
-    my $last_line        = scalar(@lines) - 1;
-    my $open_block_regex = $self->_open_block_regex;
-    my $mason1           = $self->mason_version == 1;
-    my $mason2           = $self->mason_version == 2;
+    my $last_line = scalar(@lines) - 1;
+    my $mason1    = $self->mason_version == 1;
+    my $mason2    = $self->mason_version == 2;
 
     for ( my $cur_line = 0 ; $cur_line <= $last_line ; $cur_line++ ) {
         my $line = $lines[$cur_line];
@@ -113,24 +133,6 @@ method tidy_method ($source) {
                     $add_element->( 'perl_line', "$line # __perl_block" );
                 }
                 $add_element->( 'text', '</%perl>' );
-                $cur_line = $end_line;
-                next;
-            }
-        }
-
-        # Other blocks untouched
-        #
-        if ( my ($block_type) = ( $line =~ /$open_block_regex/ ) ) {
-            my $end_line;
-            foreach my $this_line ( $cur_line + 1 .. $last_line ) {
-                if ( $lines[$this_line] =~ m{</%$block_type>} ) {
-                    $end_line = $this_line;
-                    last;
-                }
-            }
-            if ($end_line) {
-                my $block_contents = join( "\n", @lines[ $cur_line .. $end_line ] );
-                $add_element->( 'block', $block_contents );
                 $cur_line = $end_line;
                 next;
             }
@@ -187,6 +189,10 @@ method tidy_method ($source) {
     }
     my $final = join( "\n", @final_lines );
 
+    # Restore <% %> and <& &> and blocks
+    #
+    while ( $final =~ s/(${marker_prefix}_\d+)/$self->restore($1)/e ) { }
+
     # Tidy content in blocks other than <%perl>
     #
     my @replacements;
@@ -220,15 +226,6 @@ method tidy_method ($source) {
         substr( $final, $adjusted_start_pos, $length ) = $tidied_block_contents;
         $offset += length($tidied_block_contents) - length($untidied_block_contents);
     }
-
-    # Tidy Perl in <% %> tags
-    #
-    my $subst_tag_regex = $self->_subst_tag_regex;
-    $final =~ s/$subst_tag_regex/"<% " . $self->tidy_subst_expr($1) . " %>"/ge;
-
-    # Tidy Perl in <& &> and <&| &> tags
-    #
-    $final =~ s/(<&\|?)(.*?)&>/"$1 " . $self->tidy_compcall_expr($2) . " &>"/ge;
 
     return $final;
 }
@@ -299,7 +296,8 @@ method marker_in_line ($line) {
 }
 
 method restore ($marker) {
-    return $self->{markers}->{$marker};
+    my $retval = $self->{markers}->{$marker};
+    return $retval;
 }
 
 method perltidy (%params) {

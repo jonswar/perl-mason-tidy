@@ -5,6 +5,8 @@ Revision history for Mason-Tidy
 2.57  Oct 1, 2012
 
 - Add --version (Nic Wolff)
+- Fix misclassification of % at beginning of lines inside sections or tags
+- Fix <%text> blocks
 
 2.56  Oct 1, 2012
 

@@ -96,6 +96,10 @@ sub test_empty_method : Tests {
     tidy( source => '\n<%method foo>\n%\n%\n</%method>\n' );
 }
 
+sub test_text_section : Tests {
+    tidy( source => '<%text>\n% my $foo=5\n<%3+5%>\n</%text>\n' );
+}
+
 sub test_backslashes : Tests {
     tidy( source => 'Blah\\\n\n<%method foo>\\\nFoo\\\n% my $d = 5;\n</%method>\\\nBlurg\\\n' );
 }
@@ -176,6 +180,7 @@ sub test_perl_lines_and_perl_blocks : Tests {
 <%perl>
 if($foo  )   {
 </%perl>
+<% blargh() %>
 %my @ids = (1,2);
 <%perl>
 my $foo = 3;
@@ -191,6 +196,7 @@ my $s = 9;
 <%perl>
   if ($foo) {
 </%perl>
+<% blargh() %>
 %     my @ids = ( 1, 2 );
 <%perl>
       my $foo = 3;
@@ -488,6 +494,11 @@ sub test_errors : Tests {
 }
 
 sub test_random_bugs : Tests {
+    tidy(
+        desc   => '% at beginning of line inside multi-line <% %> or <& &>',
+        source => '<& /layouts/master.mc,\n%ARGS\n&>\n<%\n%ARGS\n%>'
+    );
+
     tidy(
         desc    => 'final double brace (mason 1)',
         options => { mason_version => 1 },
