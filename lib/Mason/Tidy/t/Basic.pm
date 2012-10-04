@@ -160,20 +160,6 @@ $d => "foo"
     );
 }
 
-sub test_final_newline : Tests {
-    tidy( source => '% my $foo = 5;\n', );
-    tidy( source => '% my $foo = 5;', expect => '% my $foo = 5;\n', );
-    tidy( source => '% my $foo = 5;\n% my $bar = 6;\n', );
-    tidy(
-        source => '% my $foo = 5;\n% my $bar = 6;',
-        expect => '% my $foo = 5;\n% my $bar = 6;\n'
-    );
-    tidy(
-        source => '% my $foo = 5;\n% my $bar = 6;\n\n',
-        expect => '% my $foo = 5;\n% my $bar = 6;\n\n',
-    );
-}
-
 sub test_perl_lines_and_perl_blocks : Tests {
     tidy(
         desc   => 'perl lines',
@@ -394,6 +380,14 @@ sub test_blank_lines : Tests {
     );
     tidy( source => '\n%\n%\n% my $foo = 5;\n%\n% my $bar = 6;\n%\n%\n', );
     tidy( source => '<%init>\nmy $foo = 5;\n</%init>\n\n' );
+    tidy( source => '% my $foo = 5;\n', );
+    tidy( source => '% my $foo = 5;', expect => '% my $foo = 5;\n', );
+    tidy( source => '% my $foo = 5;\n% my $bar = 6;\n', );
+    tidy(
+        source => '% my $foo = 5;\n% my $bar = 6;',
+        expect => '% my $foo = 5;\n% my $bar = 6;\n'
+    );
+    tidy( source => '% my $foo = 5;\n% my $bar = 6;\n\n', );
 }
 
 sub test_single_line_block : Tests {
