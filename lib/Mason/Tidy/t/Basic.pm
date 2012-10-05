@@ -497,6 +497,13 @@ sub test_errors : Tests {
 
 sub test_random_bugs : Tests {
     tidy(
+        desc => 'long comp call tag',
+        source =>
+          '%# <& searchFormShared, report_title => $report_title, ask_site => 1, ask_date => 1, ask_search_terms => 1, ask_result_limit => 1 &>',
+        source =>
+          '% # <& searchFormShared, report_title => $report_title, ask_site => 1, ask_date => 1, ask_search_terms => 1, ask_result_limit => 1 &>'
+    );
+    tidy(
         desc   => '% at beginning of line inside multi-line <% %> or <& &>',
         source => '<& /layouts/master.mc,\n%ARGS\n&>\n<%\n%ARGS\n%>'
     );

@@ -234,7 +234,7 @@ method tidy_subst_expr ($expr) {
     $self->perltidy(
         source      => \$expr,
         destination => \my $tidied_expr,
-        argv        => $self->perltidy_tag_argv,
+        argv        => $self->perltidy_tag_argv . " -fnl -fbl",
     );
     return trim($tidied_expr);
 }
@@ -247,7 +247,7 @@ method tidy_compcall_expr ($expr) {
     $self->perltidy(
         source      => \$expr,
         destination => \my $tidied_expr,
-        argv        => $self->perltidy_tag_argv,
+        argv        => $self->perltidy_tag_argv . " -fnl -fbl",
     );
     if ($path) {
         substr( $tidied_expr, 0, length($path) + 2 ) = $path;
