@@ -37,7 +37,7 @@ method _build__is_code_block () {
 }
 
 method _build__open_block_regex () {
-    my $re = '<%(' . join( '|', $self->block_names ) . ')(\s+\w+)?>';
+    my $re = '<%(' . join( '|', $self->block_names ) . ')(\s+[\w\._-]+)?>';
     return qr/$re/;
 }
 

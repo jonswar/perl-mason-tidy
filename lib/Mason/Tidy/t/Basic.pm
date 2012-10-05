@@ -107,6 +107,12 @@ sub test_multiple_methods : Tests {
 bar();
 </%perl>
 </%method>
+
+<%method .baz>
+%if (1) {
+<%blargh%>
+%}
+</%method>
 ',
         expect => '
 <%method foo>
@@ -117,6 +123,12 @@ bar();
 <%perl>
   bar();
 </%perl>
+</%method>
+
+<%method .baz>
+% if (1) {
+<% blargh %>
+% }
 </%method>
 '
     );
