@@ -17,7 +17,6 @@ sub tidy {
     $source =~ s/\\n/\n/g;
     if ( defined($expect) ) {
         $expect =~ s/\\n/\n/g;
-        $expect .= "\n" if $expect !~ /\n$/;    # since masontidy enforces final newline
     }
 
     my $mt = Mason::Tidy->new( %$options, perltidy_argv => '--noprofile' );
@@ -81,7 +80,7 @@ sub test_empty_method : Tests {
     tidy( source => 'foo\nbar\n' );
     return;
     tidy( source => '<%method foo>\n</%method>\n' );
-    tidy( source => '<%method foo>\n%\n</%method>\n', );
+    tidy( source => '<%method foo>\n%\n</%method>\n' );
     tidy( source => '<%method foo>\n\n</%method>' );
     tidy( source => '\n<%method foo>\n%\n%\n</%method>\n' );
 }
@@ -203,9 +202,9 @@ my $s = 9;
 }
 
 sub test_blocks_and_newlines : Tests {
-    tidy( source => "<%perl>my \$foo=5;</%perl>", );
-    tidy( source => "<%perl>my \$foo=5;\n  </%perl>", );
-    tidy( source => "<%perl>\nmy \$foo=5;</%perl>", );
+    tidy( source => "<%perl>my \$foo=5;</%perl>" );
+    tidy( source => "<%perl>my \$foo=5;\n  </%perl>" );
+    tidy( source => "<%perl>\nmy \$foo=5;</%perl>" );
     tidy(
         source => "<%perl>\nmy \$foo=5;\n</%perl>",
         expect => "<%perl>\n  my \$foo = 5;\n</%perl>"
@@ -382,16 +381,13 @@ sub test_blank_lines : Tests {
         source => '<%perl>\nmy $foo = 5;\n\nmy $bar = 6;\n\n</%perl>',
         expect => '<%perl>\n  my $foo = 5;\n\n  my $bar = 6;\n\n</%perl>'
     );
-    tidy( source => '\n%\n%\n% my $foo = 5;\n%\n% my $bar = 6;\n%\n%\n', );
+    tidy( source => '\n%\n%\n% my $foo = 5;\n%\n% my $bar = 6;\n%\n%\n' );
     tidy( source => '<%init>\nmy $foo = 5;\n</%init>\n\n' );
-    tidy( source => '% my $foo = 5;\n', );
-    tidy( source => '% my $foo = 5;', expect => '% my $foo = 5;\n', );
-    tidy( source => '% my $foo = 5;\n% my $bar = 6;\n', );
-    tidy(
-        source => '% my $foo = 5;\n% my $bar = 6;',
-        expect => '% my $foo = 5;\n% my $bar = 6;\n'
-    );
-    tidy( source => '% my $foo = 5;\n% my $bar = 6;\n\n', );
+    tidy( source => '% my $foo = 5;\n' );
+    tidy( source => '% my $foo = 5;' );
+    tidy( source => '% my $foo = 5;\n% my $bar = 6;\n' );
+    tidy( source => '% my $foo = 5;\n% my $bar = 6;' );
+    tidy( source => '% my $foo = 5;\n% my $bar = 6;\n\n' );
 }
 
 sub test_single_line_block : Tests {

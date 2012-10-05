@@ -60,7 +60,6 @@ method mixed_block_names () {
 }
 
 method tidy ($source) {
-    $source .= "\n" if substr( $source, -1, 1 ) ne "\n";
     my $final = $self->tidy_method($source);
     return $final;
 }

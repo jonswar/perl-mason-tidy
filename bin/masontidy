@@ -196,7 +196,8 @@ or
 
 =item --perltidy-line-argv
 
-Additional C<perltidy> arguments to use for Perl lines.
+Additional C<perltidy> arguments to use for Perl lines. "-fnl -fbl" will always
+be used, to preserve existing newlines.
 
 =item --perltidy-block-argv
 
@@ -205,10 +206,7 @@ Additional C<perltidy> arguments to use for code blocks.
 =item --perltidy-tag-argv
 
 Additional C<perltidy> arguments to use for C<< <% %> >> and C<< <& &> >> tags.
-For example, to ensure that these tags are never broken out onto multiple lines
-regardless of how long they are:
-
-    --perltidy-tag-argv="-fnl"  # short for --freeze-newlines
+"-fnl -fbl" will always be used, to preserve existing newlines.
 
 =item -h, --help       
 
