@@ -243,9 +243,9 @@ C<< <% %> >> tags that span multiple lines are ignored.
 
 =item *
 
-The line structure of C<< %-lines >>, C<< <% %> >> tags, and C<< <%perl> >>
-blocks will not be altered; i.e. multiple lines will not be merged and single
-lines will not be split, regardless of their length.
+The line structure of C<< %-lines >>, C<< <% %> >> tags, C<< <& &> >> and C<<
+<%perl> >> blocks will not be altered; i.e. multiple lines will not be merged
+and single lines will not be split, regardless of their length.
 
 =back
 
