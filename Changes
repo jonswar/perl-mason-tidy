@@ -2,7 +2,7 @@ Revision history for Mason-Tidy
 
 ** denotes an incompatible change
 
-2.57  Oct 1, 2012
+2.57  Oct 7, 2012
 
 - Fix misclassification of % at beginning of lines inside sections or tags
 - Fix <%text> blocks
