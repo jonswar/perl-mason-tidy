@@ -128,11 +128,11 @@ method tidy_method ($source) {
             my ($end_line) =
               grep { $lines[$_] =~ /^\s*<\/%perl>\s*$/ } ( $cur_line + 1 .. $last_line );
             if ($end_line) {
-                $add_element->( 'text', '<%perl>' );
+                $add_element->( 'begin_perl_block', '<%perl>' );
                 foreach my $line ( @lines[ $cur_line + 1 .. $end_line - 1 ] ) {
-                    $add_element->( 'perl_line', "$line # __perl_block" );
+                    $add_element->( 'perl_line', $line );
                 }
-                $add_element->( 'text', '</%perl>' );
+                $add_element->( 'end_perl_block', '</%perl>' );
                 $cur_line = $end_line;
                 next;
             }
@@ -158,10 +158,18 @@ method tidy_method ($source) {
 
     my @tidied_lines = split( /\n/, substr( $tidied_perl, 0, -1 ), -1 );
     @tidied_lines = ('') if !@tidied_lines;
-    my @final_lines = ();
+    my @final_lines     = ();
+    my $perl_block_mode = 0;
     foreach my $line (@tidied_lines) {
         if ( my $marker = $self->marker_in_line($line) ) {
-            push( @final_lines, $self->restore($marker)->[1] );
+            my ( $type, $contents ) = @{ $self->restore($marker) };
+            push( @final_lines, $contents );
+            if ( $type eq 'begin_perl_block' ) {
+                $perl_block_mode = 1;
+            }
+            elsif ( $type eq 'end_perl_block' ) {
+                $perl_block_mode = 0;
+            }
         }
         else {
             # Convert back filter invocation
@@ -171,13 +179,13 @@ method tidy_method ($source) {
                 $line =~ s/\}\s*\#\s*__end filter/\}\}/;
             }
 
-            if ( my ($real_line) = ( $line =~ /(.*?)\s*\#\s*__perl_block/ ) ) {
-                if ( $real_line =~ /\S/ ) {
+            if ($perl_block_mode) {
+                if ( $line =~ /\S/ ) {
                     my $spacer = scalar( ' ' x $self->indent_perl_block );
-                    push( @final_lines, $spacer . rtrim($real_line) );
+                    push( @final_lines, $spacer . $line );
                 }
                 else {
-                    push( @final_lines, '' );
+                    push( @final_lines, $line );
                 }
             }
             else {
