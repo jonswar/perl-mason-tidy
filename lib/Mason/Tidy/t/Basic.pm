@@ -78,7 +78,6 @@ sub test_mixed_sections : Tests {
 
 sub test_empty_method : Tests {
     tidy( source => 'foo\nbar\n' );
-    return;
     tidy( source => '<%method foo>\n</%method>\n' );
     tidy( source => '<%method foo>\n%\n</%method>\n' );
     tidy( source => '<%method foo>\n\n</%method>' );
@@ -493,22 +492,12 @@ sub test_errors : Tests {
 
 sub test_here_docs : Tests {
     tidy(
-        source => '<%perl>\nmy $text = <<"END";\nblah\nEND\n</%perl>',
-        expect => '<%perl>\n  my $text = <<"END";\nblah\nEND\n</%perl>'
+        source => '<%perl>\nmy $text = <<"END";\nblah\nblah2\nEND\nprint $text;\n</%perl>',
+        expect => '<%perl>\n  my $text = <<"END";\nblah\nblah2\nEND\n  print $text;\n</%perl>'
     );
 }
 
 sub test_random_bugs : Tests {
-    tidy(
-        desc => 'long comp call tag',
-        source =>
-          '% # <& searchFormShared, report_title => $report_title, ask_site => 1, ask_date => 1, ask_search_terms => 1, ask_result_limit => 1 &>'
-    );
-    tidy(
-        desc   => '% at beginning of line inside multi-line <% %> or <& &>',
-        source => '<& /layouts/master.mc,\n%ARGS\n&>\n<%\n%ARGS\n%>'
-    );
-
     tidy(
         desc    => 'final double brace (mason 1)',
         options => { mason_version => 1 },
@@ -523,6 +512,16 @@ sub test_random_bugs : Tests {
 % }}
 '
     );
+    tidy(
+        desc => 'long comp call tag',
+        source =>
+          '% # <& searchFormShared, report_title => $report_title, ask_site => 1, ask_date => 1, ask_search_terms => 1, ask_result_limit => 1 &>'
+    );
+    tidy(
+        desc   => '% at beginning of line inside multi-line <% %> or <& &>',
+        source => '<& /layouts/master.mc,\n%ARGS\n&>\n<%\n%ARGS\n%>'
+    );
+
 }
 
 sub test_comprehensive : Tests {

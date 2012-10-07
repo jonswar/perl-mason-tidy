@@ -146,20 +146,25 @@ method tidy_method ($source) {
     # Create content from elements with non-perl lines as comments; perltidy;
     # reassemble list of elements from tidied perl blocks and replaced elements
     #
-    my $untidied_perl = join( "\n",
+    my $untidied_perl = "{\n"
+      . join( "\n",
         map { $_->[0] eq 'perl_line' ? trim( $_->[1] ) : $self->replace_with_perl_comment($_) }
           @elements )
-      . "\n";
+      . "\n}\n";
+    $DB::single = 1;
     $self->perltidy(
         source      => \$untidied_perl,
         destination => \my $tidied_perl,
         argv        => $self->perltidy_line_argv . " -fnl -fbl",
     );
+    $tidied_perl =~ s/^{\n//;
+    $tidied_perl =~ s/}\n$//;
 
     my @tidied_lines = split( /\n/, substr( $tidied_perl, 0, -1 ), -1 );
     @tidied_lines = ('') if !@tidied_lines;
     my @final_lines     = ();
     my $perl_block_mode = 0;
+    my $standard_indent = $self->standard_line_indent();
     foreach my $line (@tidied_lines) {
         if ( my $marker = $self->marker_in_line($line) ) {
             my ( $type, $contents ) = @{ $self->restore($marker) };
@@ -179,17 +184,16 @@ method tidy_method ($source) {
                 $line =~ s/\}\s*\#\s*__end filter/\}\}/;
             }
 
+            $line =~ s/^\}\}/$standard_indent\}\}/;
             if ($perl_block_mode) {
-                if ( $line =~ /\S/ ) {
-                    my $spacer = scalar( ' ' x $self->indent_perl_block );
-                    push( @final_lines, $spacer . $line );
-                }
-                else {
-                    push( @final_lines, $line );
-                }
+                my $spacer = ( $line =~ /\S/ ? scalar( ' ' x $self->indent_perl_block ) : '' );
+                $line =~ s/^$standard_indent/$spacer/;
+                push( @final_lines, $line );
             }
             else {
-                push( @final_lines, "%" . ( $line =~ /\S/ ? " " : "" ) . $line );
+                my $spacer = ( $line =~ /\S/ ? ' ' : '' );
+                $line =~ s/^$standard_indent/$spacer/;
+                push( @final_lines, "%$line" );
             }
         }
     }
@@ -296,7 +300,7 @@ method replace_with_marker ($obj) {
 
 method marker_in_line ($line) {
     my $marker_prefix = $self->_marker_prefix;
-    if ( my ($marker) = ( $line =~ /_LINE_(${marker_prefix}_\d+)/ ) ) {
+    if ( my ($marker) = ( $line =~ /\s*_LINE_(${marker_prefix}_\d+)/ ) ) {
         return $marker;
     }
     return undef;
@@ -308,6 +312,7 @@ method restore ($marker) {
 }
 
 method perltidy (%params) {
+    $params{argv} ||= '';
     $params{argv} .= ' ' . $self->perltidy_argv;
     my $errorfile;
     Perl::Tidy::perltidy(
@@ -317,6 +322,18 @@ method perltidy (%params) {
         %params
     );
     die $errorfile if $errorfile;
+}
+
+method standard_line_indent () {
+    my $source = "{\nfoo();\n}\n";
+    $self->perltidy(
+        source      => \$source,
+        destination => \my $destination,
+        argv        => $self->perltidy_line_argv . " -fnl -fbl"
+    );
+    my ($indent) = ( $destination =~ /^(\s*)foo/m )
+      or die "cannot determine standard indent";
+    return $indent;
 }
 
 func perltidy_prefilter ($buf) {

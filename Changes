@@ -7,6 +7,7 @@ Revision history for Mason-Tidy
 - Add --version (Nic Wolff)
 - Fix misclassification of % at beginning of lines inside sections or tags
 - Fix <%text> blocks
+- Fix here-docs in <%perl> sections
 - Don't mandate final newline; this can affect component output
 
 2.56  Oct 1, 2012
