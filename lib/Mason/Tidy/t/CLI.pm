@@ -28,9 +28,9 @@ sub test_cli : Tests {
     };
 
     $cli->( "-r", "$tempdir/comp1.mc", "$tempdir/comp2.mc", @std_argv );
-    is( $out,                           "",            "out empty" );
-    is( read_file("$tempdir/comp1.mc"), "<% 2 + 2 %>", "comp1" );
-    is( read_file("$tempdir/comp2.mc"), "<% 4 + 4 %>", "comp2" );
+    is( $out,                           "$tempdir/comp1.mc\n$tempdir/comp2.mc\n", "out empty" );
+    is( read_file("$tempdir/comp1.mc"), "<% 2 + 2 %>",                            "comp1" );
+    is( read_file("$tempdir/comp2.mc"), "<% 4 + 4 %>",                            "comp2" );
 
     write_file( "$tempdir/comp1.mc", "<%2+2%>" );
     $cli->( "$tempdir/comp1.mc", @std_argv );

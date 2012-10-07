@@ -81,6 +81,7 @@ method run () {
     }
     else {
         foreach my $file (@argv) {
+            print "$file\n" if @argv > 1;
             my $source = read_file($file);
             my $dest   = $mt->tidy($source);
             if ($replace) {
