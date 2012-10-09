@@ -217,6 +217,10 @@ sub test_blocks_and_newlines : Tests {
         expect => '<%perl>\n\n\n  my $foo = 3;\n\n\n  my $bar = 4;\n\n\n</%perl>',
     );
     tidy(
+        source => '    <%perl>\nmy $foo = 3;\n</%perl>    ',
+        expect => '    <%perl>\n  my $foo = 3;\n</%perl>    '
+    );
+    tidy(
         source => "<%init>my \$foo=5;</%init>",
         expect => "<%init>my \$foo = 5;</%init>"
     );
@@ -236,6 +240,7 @@ sub test_blocks_and_newlines : Tests {
         source => '<%init>\n\nmy $foo = 3;\n\nmy $bar = 4;\n\n</%init>',
         expect => '<%init>\nmy $foo = 3;\nmy $bar = 4;\n</%init>',
     );
+    tidy( source => '    <%init>\nmy $foo = 3;\n</%init>    ' );
 }
 
 sub test_tags : Tests {

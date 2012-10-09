@@ -128,11 +128,11 @@ method tidy_method ($source) {
             my ($end_line) =
               grep { $lines[$_] =~ /^\s*<\/%perl>\s*$/ } ( $cur_line + 1 .. $last_line );
             if ($end_line) {
-                $add_element->( 'begin_perl_block', '<%perl>' );
+                $add_element->( 'begin_perl_block', $line );
                 foreach my $line ( @lines[ $cur_line + 1 .. $end_line - 1 ] ) {
                     $add_element->( 'perl_line', $line );
                 }
-                $add_element->( 'end_perl_block', '</%perl>' );
+                $add_element->( 'end_perl_block', $lines[$end_line] );
                 $cur_line = $end_line;
                 next;
             }

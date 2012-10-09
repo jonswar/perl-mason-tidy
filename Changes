@@ -4,6 +4,8 @@ Revision history for Mason-Tidy
 
 2.58  Oct 7, 2012
 
+- Fix same-line whitespace before block start and after block end
+
 2.57  Oct 7, 2012
 
 - Fix misclassification of % at beginning of lines inside sections or tags
