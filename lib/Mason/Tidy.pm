@@ -151,7 +151,6 @@ method tidy_method ($source) {
         map { $_->[0] eq 'perl_line' ? trim( $_->[1] ) : $self->replace_with_perl_comment($_) }
           @elements )
       . "\n}\n";
-    $DB::single = 1;
     $self->perltidy(
         source      => \$untidied_perl,
         destination => \my $tidied_perl,
