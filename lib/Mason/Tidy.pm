@@ -18,11 +18,12 @@ has 'perltidy_line_argv'  => ( is => 'ro', default => sub { '' } );
 has 'perltidy_tag_argv'   => ( is => 'ro', default => sub { '' } );
 
 # Private
-has '_is_code_block'    => ( is => 'lazy' );
-has '_is_mixed_block'   => ( is => 'lazy' );
-has '_marker_prefix'    => ( is => 'ro', default => sub { '__masontidy__' } );
-has '_open_block_regex' => ( is => 'lazy' );
-has '_subst_tag_regex'  => ( is => 'lazy' );
+has '_is_code_block'        => ( is => 'lazy' );
+has '_is_mixed_block'       => ( is => 'lazy' );
+has '_marker_prefix'        => ( is => 'ro', default => sub { '__masontidy__' } );
+has '_open_block_regex'     => ( is => 'lazy' );
+has '_standard_line_indent' => ( is => 'lazy' );
+has '_subst_tag_regex'      => ( is => 'lazy' );
 
 func validate_mason_version () {
     die "must be 1 or 2" unless $_[0] =~ /^[12]$/;
@@ -44,6 +45,18 @@ method _build__open_block_regex () {
 method _build__subst_tag_regex () {
     my $re = '<%(?!' . join( '|', $self->block_names, 'perl' ) . ')(.*?)%>';
     return qr/$re/;
+}
+
+method _build__standard_line_indent () {
+    my $source = "{\nfoo();\n}\n";
+    $self->perltidy(
+        source      => \$source,
+        destination => \my $destination,
+        argv        => $self->perltidy_line_argv . " -fnl -fbl"
+    );
+    my ($indent) = ( $destination =~ /^(\s*)foo/m )
+      or die "cannot determine standard indent";
+    return $indent;
 }
 
 method block_names () {
@@ -163,7 +176,6 @@ method tidy_method ($source) {
     @tidied_lines = ('') if !@tidied_lines;
     my @final_lines     = ();
     my $perl_block_mode = 0;
-    my $standard_indent = $self->standard_line_indent();
     foreach my $line (@tidied_lines) {
         if ( my $marker = $self->marker_in_line($line) ) {
             my ( $type, $contents ) = @{ $self->restore($marker) };
@@ -183,6 +195,7 @@ method tidy_method ($source) {
                 $line =~ s/\}\s*\#\s*__end filter/\}\}/;
             }
 
+            my $standard_indent = $self->_standard_line_indent;
             $line =~ s/^\}\}/$standard_indent\}\}/;
             if ($perl_block_mode) {
                 my $spacer = ( $line =~ /\S/ ? scalar( ' ' x $self->indent_perl_block ) : '' );
@@ -321,18 +334,6 @@ method perltidy (%params) {
         %params
     );
     die $errorfile if $errorfile;
-}
-
-method standard_line_indent () {
-    my $source = "{\nfoo();\n}\n";
-    $self->perltidy(
-        source      => \$source,
-        destination => \my $destination,
-        argv        => $self->perltidy_line_argv . " -fnl -fbl"
-    );
-    my ($indent) = ( $destination =~ /^(\s*)foo/m )
-      or die "cannot determine standard indent";
-    return $indent;
 }
 
 func perltidy_prefilter ($buf) {
