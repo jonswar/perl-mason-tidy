@@ -19,7 +19,7 @@ sub tidy {
         $expect =~ s/\\n/\n/g;
     }
 
-    my $mt = Mason::Tidy->new( %$options, perltidy_argv => '--noprofile' );
+    my $mt = Mason::Tidy->new( perltidy_argv => '--noprofile', %$options );
     my $dest = eval { $mt->tidy($source) };
     my $err = $@;
     if ( my $expect_error = $params{expect_error} ) {
@@ -483,15 +483,22 @@ if ($foo) {
 }
 
 sub test_errors : Tests {
+
+    #    tidy(
+    #        desc         => 'syntax error',
+    #        source       => '% if ($foo) {',
+    #        expect_error => qr/final indentation level/,
+    #    );
+    #    tidy(
+    #        desc         => 'no matching close block',
+    #        source       => "<%init>\nmy \$foo = bar;</%ini>",
+    #        expect_error => qr/no matching end tag/,
+    #    );
     tidy(
-        desc         => 'syntax error',
-        source       => '% if ($foo) {',
-        expect_error => qr/final indentation level/,
-    );
-    tidy(
-        desc         => 'no matching close block',
-        source       => "<%init>\nmy \$foo = bar;</%ini>",
-        expect_error => qr/no matching end tag/,
+        desc         => 'bad option',
+        source       => 'my $foo = 5;',
+        options      => { perltidy_argv => '--noprofile --blahblah' },
+        expect_error => qr/sdfksd/,
     );
 }
 

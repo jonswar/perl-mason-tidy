@@ -7,6 +7,7 @@ use strict;
 use warnings;
 
 my $marker_count = 0;
+my ( $static_source, $static_destination, $static_errorfile );
 
 # Public
 has 'indent_block'        => ( is => 'ro', default => sub { 0 } );
@@ -49,11 +50,7 @@ method _build__subst_tag_regex () {
 
 method _build__standard_line_indent () {
     my $source = "{\nfoo();\n}\n";
-    $self->perltidy(
-        source      => \$source,
-        destination => \my $destination,
-        argv        => $self->perltidy_line_argv . " -fnl -fbl"
-    );
+    my $destination = $self->perltidy( $source, $self->perltidy_line_argv . " -fnl -fbl" );
     my ($indent) = ( $destination =~ /^(\s*)foo/m )
       or die "cannot determine standard indent";
     return $indent;
@@ -97,7 +94,7 @@ method tidy_method ($source) {
     #
     $source =~ s/(<&\|?)(.*?)&>/"$1 " . $self->tidy_compcall_expr($2) . " &>"/ge;
 
-    # Hide <% %> and <& &>
+    # Hide blocks and <% %> and <& &>
     #
     while ( $source =~ s/($open_block_regex.*?<\/%\2>)/$self->replace_with_marker($1)/se )   { }
     while ( $source =~ s/(<(%|&\|?)(?![A-Za-z]+>).*?\2>)/$self->replace_with_marker($1)/se ) { }
@@ -164,11 +161,7 @@ method tidy_method ($source) {
         map { $_->[0] eq 'perl_line' ? trim( $_->[1] ) : $self->replace_with_perl_comment($_) }
           @elements )
       . "\n}\n";
-    $self->perltidy(
-        source      => \$untidied_perl,
-        destination => \my $tidied_perl,
-        argv        => $self->perltidy_line_argv . " -fnl -fbl",
-    );
+    my $tidied_perl = $self->perltidy( $untidied_perl, $self->perltidy_line_argv . " -fnl -fbl" );
     $tidied_perl =~ s/^{\n//;
     $tidied_perl =~ s/}\n$//;
 
@@ -254,11 +247,7 @@ method tidy_method ($source) {
 }
 
 method tidy_subst_expr ($expr) {
-    $self->perltidy(
-        source      => \$expr,
-        destination => \my $tidied_expr,
-        argv        => $self->perltidy_tag_argv . " -fnl -fbl",
-    );
+    my $tidied_expr = $self->perltidy( $expr, $self->perltidy_tag_argv . " -fnl -fbl" );
     return trim($tidied_expr);
 }
 
@@ -267,11 +256,7 @@ method tidy_compcall_expr ($expr) {
     if ( ($path) = ( $expr =~ /^(\s*[\w\/\.][^,]+)/ ) ) {
         substr( $expr, 0, length($path) ) = "'$path'";
     }
-    $self->perltidy(
-        source      => \$expr,
-        destination => \my $tidied_expr,
-        argv        => $self->perltidy_tag_argv . " -fnl -fbl",
-    );
+    my $tidied_expr = $self->perltidy( $expr, $self->perltidy_tag_argv . " -fnl -fbl" );
     if ($path) {
         substr( $tidied_expr, 0, length($path) + 2 ) = $path;
     }
@@ -283,11 +268,7 @@ method handle_block ($block_type, $block_args, $block_contents) {
         || ( $block_type eq 'filter' && !defined($block_args) ) )
     {
         $block_contents = trim_lines($block_contents);
-        $self->perltidy(
-            source      => \$block_contents,
-            destination => \my $tidied_block_contents,
-            argv        => $self->perltidy_block_argv
-        );
+        my $tidied_block_contents = $self->perltidy( $block_contents, $self->perltidy_block_argv );
         $block_contents = trim($tidied_block_contents);
         my $spacer = scalar( ' ' x $self->indent_block );
         $block_contents =~ s/^/$spacer/mg;
@@ -323,17 +304,16 @@ method restore ($marker) {
     return $retval;
 }
 
-method perltidy (%params) {
-    $params{argv} ||= '';
-    $params{argv} .= ' ' . $self->perltidy_argv;
-    my $errorfile;
-    Perl::Tidy::perltidy(
+method perltidy ($source, $argv) {
+    $self->{tidiers}->{$argv} ||= Perl::Tidy::Tidier->new(
         prefilter  => \&perltidy_prefilter,
         postfilter => \&perltidy_postfilter,
-        errorfile  => \$errorfile,
-        %params
+        argv       => join( ' ', $argv, $self->perltidy_argv )
     );
-    die $errorfile if $errorfile;
+    my $result = $self->{tidiers}->{$argv}->tidy($source);
+    die $result->errorfile if $result->errorfile;
+    die $result->stderr    if $result->stderr;
+    return $result->destination;
 }
 
 func perltidy_prefilter ($buf) {
