@@ -326,13 +326,16 @@ method restore ($marker) {
 method perltidy (%params) {
     $params{argv} ||= '';
     $params{argv} .= ' ' . $self->perltidy_argv;
-    my $errorfile;
-    Perl::Tidy::perltidy(
+    $params{argv} = trim( $params{argv} );
+    my ( $errorfile, $stderr );
+    my $error_flag = Perl::Tidy::perltidy(
         prefilter  => \&perltidy_prefilter,
         postfilter => \&perltidy_postfilter,
         errorfile  => \$errorfile,
+        stderr     => \$stderr,
         %params
     );
+    die "error running perltidy with args '$params{argv}': $stderr" if $error_flag;
     die $errorfile if $errorfile;
 }
 

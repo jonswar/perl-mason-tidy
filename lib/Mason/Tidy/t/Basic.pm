@@ -19,7 +19,7 @@ sub tidy {
         $expect =~ s/\\n/\n/g;
     }
 
-    my $mt = Mason::Tidy->new( %$options, perltidy_argv => '--noprofile' );
+    my $mt = Mason::Tidy->new( perltidy_argv => '--noprofile', %$options );
     my $dest = eval { $mt->tidy($source) };
     my $err = $@;
     if ( my $expect_error = $params{expect_error} ) {
@@ -483,6 +483,12 @@ if ($foo) {
 }
 
 sub test_errors : Tests {
+    tidy(
+        desc         => 'bad argv',
+        source       => 'my $foo = 5;',
+        options      => { perltidy_argv => '--noprofile --blahblah' },
+        expect_error => qr/error running perltidy.*Unknown option: blahblah/,
+    );
     tidy(
         desc         => 'syntax error',
         source       => '% if ($foo) {',
