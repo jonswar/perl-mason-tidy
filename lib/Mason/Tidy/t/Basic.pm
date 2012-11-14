@@ -483,22 +483,15 @@ if ($foo) {
 }
 
 sub test_errors : Tests {
-
-    #    tidy(
-    #        desc         => 'syntax error',
-    #        source       => '% if ($foo) {',
-    #        expect_error => qr/final indentation level/,
-    #    );
-    #    tidy(
-    #        desc         => 'no matching close block',
-    #        source       => "<%init>\nmy \$foo = bar;</%ini>",
-    #        expect_error => qr/no matching end tag/,
-    #    );
     tidy(
-        desc         => 'bad option',
-        source       => 'my $foo = 5;',
-        options      => { perltidy_argv => '--noprofile --blahblah' },
-        expect_error => qr/sdfksd/,
+        desc         => 'syntax error',
+        source       => '% if ($foo) {',
+        expect_error => qr/final indentation level/,
+    );
+    tidy(
+        desc         => 'no matching close block',
+        source       => "<%init>\nmy \$foo = bar;</%ini>",
+        expect_error => qr/no matching end tag/,
     );
 }
 
