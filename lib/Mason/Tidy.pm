@@ -30,6 +30,12 @@ func validate_mason_version () {
     die "must be 1 or 2" unless $_[0] =~ /^[12]$/;
 }
 
+method BUILD () {
+    foreach my $key (qw(perltidy_line_argv perltidy_tag_argv)) {
+        $self->{$key} .= ' -fnl -fbl ' unless $self->{$key} eq "NONE";
+    }
+}
+
 method _build__is_mixed_block () {
     return { map { ( $_, 1 ) } $self->mixed_block_names };
 }
@@ -50,7 +56,7 @@ method _build__subst_tag_regex () {
 
 method _build__standard_line_indent () {
     my $source = "{\nfoo();\n}\n";
-    my $destination = $self->perltidy( $source, $self->perltidy_line_argv . " -fnl -fbl" );
+    my $destination = $self->perltidy( $source, $self->perltidy_line_argv );
     my ($indent) = ( $destination =~ /^(\s*)foo/m )
       or die "cannot determine standard indent";
     return $indent;
@@ -161,7 +167,7 @@ method tidy_method ($source) {
         map { $_->[0] eq 'perl_line' ? trim( $_->[1] ) : $self->replace_with_perl_comment($_) }
           @elements )
       . "\n}\n";
-    my $tidied_perl = $self->perltidy( $untidied_perl, $self->perltidy_line_argv . " -fnl -fbl" );
+    my $tidied_perl = $self->perltidy( $untidied_perl, $self->perltidy_line_argv );
     $tidied_perl =~ s/^{\n//;
     $tidied_perl =~ s/}\n$//;
 
@@ -247,7 +253,7 @@ method tidy_method ($source) {
 }
 
 method tidy_subst_expr ($expr) {
-    my $tidied_expr = $self->perltidy( $expr, $self->perltidy_tag_argv . " -fnl -fbl" );
+    my $tidied_expr = $self->perltidy( $expr, $self->perltidy_tag_argv );
     return trim($tidied_expr);
 }
 
@@ -256,7 +262,7 @@ method tidy_compcall_expr ($expr) {
     if ( ($path) = ( $expr =~ /^(\s*[\w\/\.][^,]+)/ ) ) {
         substr( $expr, 0, length($path) ) = "'$path'";
     }
-    my $tidied_expr = $self->perltidy( $expr, $self->perltidy_tag_argv . " -fnl -fbl" );
+    my $tidied_expr = $self->perltidy( $expr, $self->perltidy_tag_argv );
     if ($path) {
         substr( $tidied_expr, 0, length($path) + 2 ) = $path;
     }
@@ -305,6 +311,7 @@ method restore ($marker) {
 }
 
 method perltidy ($source, $argv) {
+    return $source if ( $argv eq "NONE" );
     $argv .= ' ' . $self->perltidy_argv;
     $argv = trim($argv);
     my ( $errorfile, $stderr, $destination );

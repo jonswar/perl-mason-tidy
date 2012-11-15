@@ -199,14 +199,20 @@ or
 Additional C<perltidy> arguments to use for Perl lines. "-fnl -fbl" will always
 be used, to preserve existing newlines.
 
+If this is set to "NONE", then lines will not be tidied.
+
 =item --perltidy-block-argv
 
 Additional C<perltidy> arguments to use for code blocks.
+
+If this is set to "NONE", then blocks will not be tidied.
 
 =item --perltidy-tag-argv
 
 Additional C<perltidy> arguments to use for C<< <% %> >> and C<< <& &> >> tags.
 "-fnl -fbl" will always be used, to preserve existing newlines.
+
+If this is set to "NONE", then tags will not be tidied.
 
 =item -h, --help       
 
