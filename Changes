@@ -4,6 +4,7 @@ Revision history for Mason-Tidy
 
 2.58  Oct 7, 2012
 
+- Allow disabling of block, line, or tag tidying by specifying NONE in appropriate argv
 - Fix same-line whitespace before block start and after block end
 - Report bad argv errors
 
