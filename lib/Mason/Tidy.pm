@@ -305,15 +305,22 @@ method restore ($marker) {
 }
 
 method perltidy ($source, $argv) {
-    $self->{tidiers}->{$argv} ||= Perl::Tidy::Tidier->new(
-        prefilter  => \&perltidy_prefilter,
-        postfilter => \&perltidy_postfilter,
-        argv       => join( ' ', $argv, $self->perltidy_argv )
+    $argv .= ' ' . $self->perltidy_argv;
+    $argv = trim($argv);
+    my ( $errorfile, $stderr, $destination );
+    my $error_flag = Perl::Tidy::perltidy(
+        prefilter   => \&perltidy_prefilter,
+        postfilter  => \&perltidy_postfilter,
+        source      => \$source,
+        destination => \$destination,
+        errorfile   => \$errorfile,
+        stderr      => \$stderr,
+        argv        => $argv
     );
-    my $result = $self->{tidiers}->{$argv}->tidy($source);
-    die $result->errorfile if $result->errorfile;
-    die $result->stderr    if $result->stderr;
-    return $result->destination;
+    die "error running perltidy with args '$argv': $stderr" if $error_flag;
+    die $errorfile if $errorfile;
+
+    return $destination;
 }
 
 func perltidy_prefilter ($buf) {

@@ -484,6 +484,12 @@ if ($foo) {
 
 sub test_errors : Tests {
     tidy(
+        desc         => 'bad argv',
+        source       => 'my $foo = 5;',
+        options      => { perltidy_argv => '--noprofile --blahblah' },
+        expect_error => qr/error running perltidy.*Unknown option: blahblah/,
+    );
+    tidy(
         desc         => 'syntax error',
         source       => '% if ($foo) {',
         expect_error => qr/final indentation level/,
